@@ -7,16 +7,55 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <button
-          type="button"
-          class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-          @click="exportarExcel"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-          </svg>
-          Exportar a Excel
-        </button>
+        <!-- Exportar a Excel (con variantes) -->
+        <div ref="menuExportarRef" class="relative">
+          <button
+            type="button"
+            class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+            @click="mostrarMenuExportar = !mostrarMenuExportar"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Exportar a Excel
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400 transition-transform" :class="{ 'rotate-180': mostrarMenuExportar }" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+
+          <Transition name="fade">
+            <div
+              v-if="mostrarMenuExportar"
+              class="absolute right-0 z-20 mt-2 w-64 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+            >
+              <button
+                type="button"
+                class="block w-full px-4 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50"
+                @click="exportarExcel('filtrados')"
+              >
+                Excel con los filtros aplicados
+                <span class="block text-xs text-slate-400">{{ bienesFiltrados.length }} bienes visibles ahora</span>
+              </button>
+              <button
+                type="button"
+                class="block w-full px-4 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50"
+                @click="exportarExcel('asignados')"
+              >
+                Excel de bienes asignados
+                <span class="block text-xs text-slate-400">Solo con estatus "Asignado"</span>
+              </button>
+              <button
+                type="button"
+                class="block w-full px-4 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50"
+                @click="exportarExcel('todos')"
+              >
+                Excel de todos los bienes
+                <span class="block text-xs text-slate-400">Ignora la búsqueda y los filtros</span>
+              </button>
+            </div>
+          </Transition>
+        </div>
+
         <button
           type="button"
           class="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-900/30 transition hover:from-blue-500 hover:to-indigo-500"
@@ -25,7 +64,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
-          Nuevo bien
+          Agregar Bien
         </button>
       </div>
     </div>
@@ -74,8 +113,8 @@
           <button
             type="button"
             class="relative flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-            :class="mostrarFiltros ? 'border-blue-400/60 bg-blue-50 text-blue-700' : ''"
-            @click="mostrarFiltros = !mostrarFiltros"
+            :class="hayFiltrosActivos ? 'border-blue-400/60 bg-blue-50 text-blue-700' : ''"
+            @click="mostrarModalFiltros = true"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
@@ -86,61 +125,10 @@
         </div>
       </div>
 
-      <!-- Panel de filtros -->
-      <div v-if="mostrarFiltros" class="flex flex-wrap items-center gap-5 border-b border-slate-200 bg-slate-50/60 px-4 py-3">
-        <div class="flex items-center gap-2">
-          <label class="text-xs font-medium text-slate-500">Estatus</label>
-          <div class="relative">
-            <select
-              v-model="filtroEstatus"
-              class="m-0 appearance-none rounded-lg border border-slate-200 bg-white py-1.5 pl-2.5 pr-7 text-sm font-medium text-slate-600 shadow-none outline-none transition focus:border-blue-400/60 focus:ring-2 focus:ring-blue-500/30"
-            >
-              <option value="todos">Todos</option>
-              <option v-for="opcion in ESTATUS_LISTA" :key="opcion" :value="opcion">{{ opcion }}</option>
-            </select>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="2"
-              stroke="currentColor"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-medium text-slate-500">Inventariable</span>
-          <div class="flex rounded-lg border border-slate-200 bg-white p-0.5">
-            <button
-              v-for="opcion in INVENTARIABLE_OPCIONES"
-              :key="opcion.valor"
-              type="button"
-              class="rounded-md px-2.5 py-1 text-xs font-medium transition"
-              :class="filtroInventariable === opcion.valor ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'"
-              @click="filtroInventariable = opcion.valor"
-            >
-              {{ opcion.etiqueta }}
-            </button>
-          </div>
-        </div>
-
-        <button
-          v-if="hayFiltrosActivos"
-          type="button"
-          class="text-xs font-medium text-blue-600 transition hover:text-blue-700"
-          @click="limpiarFiltros"
-        >
-          Limpiar filtros
-        </button>
-      </div>
-
       <!-- Tabla -->
-      <div class="overflow-x-auto">
+      <div class="max-h-[600px] overflow-auto">
         <table class="w-full text-left text-sm">
-          <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead class="sticky top-0 z-10 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-[0_1px_0_0] shadow-slate-200">
             <tr>
               <th class="whitespace-nowrap px-4 py-3">Nombre</th>
               <th class="whitespace-nowrap px-4 py-3">Modelo</th>
@@ -300,14 +288,20 @@
         </div>
       </div>
     </div>
+
+    <NuevoBienModal v-model:open="mostrarModalNuevoBien" @guardar="onGuardarBien" />
+    <FiltrosBienesModal v-model:open="mostrarModalFiltros" :filtros="filtros" @aplicar="onAplicarFiltros" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useBienesData, type Bien, type EstatusBien } from '@/composables/useBienesData'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { filtrosVacios, useBienesData, type Bien, type EstatusBien, type FiltrosBienes } from '@/composables/useBienesData'
+import { descargarCsv } from '@/utils/csv'
+import NuevoBienModal from '@/components/bienes/NuevoBienModal.vue'
+import FiltrosBienesModal from '@/components/bienes/FiltrosBienesModal.vue'
 
-const { bienes } = useBienesData()
+const { bienes, agregarBien } = useBienesData()
 
 const PAGE_SIZE_OPCIONES = [10, 25, 50, 100] as const
 
@@ -315,23 +309,23 @@ const busqueda = ref('')
 const pageSize = ref<(typeof PAGE_SIZE_OPCIONES)[number]>(10)
 const paginaActual = ref(1)
 
-const mostrarFiltros = ref(false)
-const ESTATUS_LISTA: EstatusBien[] = ['Asignado', 'Por asignar', 'En reparación', 'Baja']
-const filtroEstatus = ref<EstatusBien | 'todos'>('todos')
+const mostrarModalFiltros = ref(false)
+const filtros = ref<FiltrosBienes>(filtrosVacios())
 
-type FiltroInventariable = 'todos' | 'si' | 'no'
-const INVENTARIABLE_OPCIONES: Array<{ valor: FiltroInventariable; etiqueta: string }> = [
-  { valor: 'todos', etiqueta: 'Todos' },
-  { valor: 'si', etiqueta: 'Sí' },
-  { valor: 'no', etiqueta: 'No' },
-]
-const filtroInventariable = ref<FiltroInventariable>('todos')
+const hayFiltrosActivos = computed(
+  () =>
+    filtros.value.tipo !== '' ||
+    filtros.value.estatus !== '' ||
+    filtros.value.inventariable !== 'todos' ||
+    filtros.value.ubicacion !== '' ||
+    filtros.value.direccion !== '' ||
+    filtros.value.departamento !== '' ||
+    filtros.value.fechaAltaDesde !== '' ||
+    filtros.value.fechaAltaHasta !== '',
+)
 
-const hayFiltrosActivos = computed(() => filtroEstatus.value !== 'todos' || filtroInventariable.value !== 'todos')
-
-function limpiarFiltros() {
-  filtroEstatus.value = 'todos'
-  filtroInventariable.value = 'todos'
+function onAplicarFiltros(nuevosFiltros: FiltrosBienes) {
+  filtros.value = nuevosFiltros
 }
 
 function normalizar(texto: string): string {
@@ -339,6 +333,31 @@ function normalizar(texto: string): string {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
+}
+
+function coincideConFiltros(bien: Bien): boolean {
+  const f = filtros.value
+
+  const coincideTipo = !f.tipo || bien.nombre === f.tipo
+  const coincideEstatus = !f.estatus || bien.estatus === f.estatus
+  const coincideInventariable =
+    f.inventariable === 'todos' || (f.inventariable === 'si' && bien.inventariable) || (f.inventariable === 'no' && !bien.inventariable)
+  const coincideUbicacion = !f.ubicacion || bien.ubicacion === f.ubicacion
+  const coincideDireccion = !f.direccion || bien.direccion === f.direccion
+  const coincideDepartamento = !f.departamento || bien.departamento === f.departamento
+  const coincideFechaDesde = !f.fechaAltaDesde || bien.fechaAlta >= f.fechaAltaDesde
+  const coincideFechaHasta = !f.fechaAltaHasta || bien.fechaAlta <= f.fechaAltaHasta
+
+  return (
+    coincideTipo &&
+    coincideEstatus &&
+    coincideInventariable &&
+    coincideUbicacion &&
+    coincideDireccion &&
+    coincideDepartamento &&
+    coincideFechaDesde &&
+    coincideFechaHasta
+  )
 }
 
 const bienesFiltrados = computed(() => {
@@ -357,14 +376,7 @@ const bienesFiltrados = computed(() => {
         bien.estatus,
       ].some((campo) => normalizar(campo).includes(termino))
 
-    const coincideEstatus = filtroEstatus.value === 'todos' || bien.estatus === filtroEstatus.value
-
-    const coincideInventariable =
-      filtroInventariable.value === 'todos' ||
-      (filtroInventariable.value === 'si' && bien.inventariable) ||
-      (filtroInventariable.value === 'no' && !bien.inventariable)
-
-    return coincideBusqueda && coincideEstatus && coincideInventariable
+    return coincideBusqueda && coincideConFiltros(bien)
   })
 })
 
@@ -379,7 +391,7 @@ const rangoInicio = computed(() => (bienesFiltrados.value.length === 0 ? 0 : (pa
 const rangoFin = computed(() => Math.min(paginaActual.value * pageSize.value, bienesFiltrados.value.length))
 
 // Vuelve a la primera página cuando cambia la búsqueda, los filtros o el tamaño de página.
-watch([busqueda, pageSize, filtroEstatus, filtroInventariable], () => {
+watch([busqueda, pageSize, filtros], () => {
   paginaActual.value = 1
 })
 
@@ -418,9 +430,29 @@ function estatusClasses(estatus: EstatusBien): string {
   return ESTATUS_ESTILOS[estatus]
 }
 
+const mostrarModalNuevoBien = ref(false)
+
 function nuevoBien() {
-  // TODO: navegar al formulario de alta de bienes cuando exista,
-  // ej. router.push('/dashboard/bienes/nuevo')
+  mostrarModalNuevoBien.value = true
+}
+
+// Menú desplegable "Exportar a Excel" — se cierra al hacer clic fuera de él.
+const mostrarMenuExportar = ref(false)
+const menuExportarRef = ref<HTMLElement | null>(null)
+
+function cerrarMenuExportarSiEsFuera(evento: MouseEvent) {
+  if (menuExportarRef.value && !menuExportarRef.value.contains(evento.target as Node)) {
+    mostrarMenuExportar.value = false
+  }
+}
+
+onMounted(() => document.addEventListener('mousedown', cerrarMenuExportarSiEsFuera))
+onBeforeUnmount(() => document.removeEventListener('mousedown', cerrarMenuExportarSiEsFuera))
+
+function onGuardarBien(datos: Omit<Bien, 'id'>) {
+  agregarBien(datos)
+  // Vuelve a la primera página para que el bien recién agregado sea visible.
+  paginaActual.value = 1
 }
 
 function editarBien(bien: Bien) {
@@ -439,8 +471,10 @@ function imprimirFicha(bien: Bien) {
   console.info('Imprimir ficha de bien', bien.id)
 }
 
-/** Exporta el listado actualmente filtrado a un CSV compatible con Excel. */
-function exportarExcel() {
+type VarianteExportacion = 'filtrados' | 'asignados' | 'todos'
+
+/** Exporta una lista de bienes a CSV (compatible con Excel). */
+function exportarBienes(lista: Bien[], sufijoArchivo: string) {
   const encabezados = [
     'Nombre',
     'Modelo',
@@ -454,7 +488,7 @@ function exportarExcel() {
     'Inventariable',
   ]
 
-  const filas = bienesFiltrados.value.map((bien) => [
+  const filas = lista.map((bien) => [
     bien.nombre,
     bien.modelo,
     bien.marca,
@@ -467,19 +501,19 @@ function exportarExcel() {
     bien.inventariable ? 'Sí' : 'No',
   ])
 
-  const escaparCelda = (valor: string) => `"${valor.replace(/"/g, '""')}"`
-  const contenido = [encabezados, ...filas].map((fila) => fila.map(escaparCelda).join(',')).join('\r\n')
+  descargarCsv(encabezados, filas, `bienes_${sufijoArchivo}`)
+}
 
-  // BOM al inicio para que Excel detecte correctamente UTF-8 (acentos, ñ).
-  const blob = new Blob([`﻿${contenido}`], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
+/** Exporta a CSV según la variante elegida en el menú "Exportar a Excel". */
+function exportarExcel(variante: VarianteExportacion) {
+  if (variante === 'asignados') {
+    exportarBienes(bienes.filter((bien) => bien.estatus === 'Asignado'), 'asignados')
+  } else if (variante === 'todos') {
+    exportarBienes(bienes, 'todos')
+  } else {
+    exportarBienes(bienesFiltrados.value, 'filtrados')
+  }
 
-  const enlace = document.createElement('a')
-  enlace.href = url
-  enlace.download = `bienes_${new Date().toISOString().slice(0, 10)}.csv`
-  document.body.appendChild(enlace)
-  enlace.click()
-  document.body.removeChild(enlace)
-  URL.revokeObjectURL(url)
+  mostrarMenuExportar.value = false
 }
 </script>

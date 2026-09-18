@@ -33,7 +33,17 @@ const router = createRouter({
           path: 'bienes',
           name: 'Bienes',
           component: () => import('../pages/Bienes.vue')
-        }
+        },
+        {
+          path: 'bienes/asignacion',
+          name: 'AsignarBienes',
+          component: () => import('../pages/AsignarBienes.vue')
+        },
+        {
+          path: 'bienes/hojas',
+          name: 'HojasBienes',
+          component: () => import('../pages/HojasBienes.vue')
+        },
       ]
     }
   ],

@@ -242,8 +242,7 @@ const navItems: NavItem[] = [
     children: [
       { label: 'Lista de Bienes', to: '/dashboard/bienes' },
       { label: 'Asignación/Reasignación', to: '/dashboard/bienes/asignacion' },
-      { label: 'Hoja de resguardo', to: '/dashboard/bienes/resguardo' },
-      { label: 'Hojas de Entrega', to: '/dashboard/bienes/entrega' },
+      { label: 'Hojas de resguardo y entrega', to: '/dashboard/bienes/hojas' },
       { label: 'Agregar un tipo de bien', to: '/dashboard/bienes/tipos/nuevo' },
     ],
   },
@@ -285,7 +284,7 @@ const pageTitle = computed(() => {
 })
 
 function isActive(to: string) {
-  return route.path === to || route.path.startsWith(`${to}/`)
+  return route.path === to
 }
 
 function isGroupActive(group: NavGroup) {

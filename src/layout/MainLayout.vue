@@ -9,7 +9,7 @@
 
     <!-- Sidebar -->
     <aside
-      class="fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-slate-900 border-r border-slate-800 transition-all duration-300 lg:static! lg:translate-x-0"
+      class="fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-slate-900 border-r border-slate-800 transition-all duration-300 lg:static lg:translate-x-0"
       :class="[
         mobileOpen ? 'translate-x-0' : '-translate-x-full',
         collapsed ? 'lg:w-20' : 'lg:w-64',
@@ -17,7 +17,7 @@
     >
       <!-- Logo -->
       <div class="flex h-16 shrink-0 items-center gap-3 border-b border-slate-800 px-5">
-        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg shadow-blue-900/40">
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-sm">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
           </svg>
@@ -32,9 +32,9 @@
           <RouterLink
             v-if="item.type === 'link'"
             :to="item.to"
-            class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition"
+            class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
             :class="isActive(item.to)
-              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-900/30'
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm'
               : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'"
             :title="collapsed ? item.label : undefined"
           >
@@ -48,7 +48,7 @@
           <div v-else>
             <button
               type="button"
-              class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition"
+              class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
               :class="isGroupActive(item) || isGroupOpen(item.label)
                 ? 'bg-slate-800/80 text-white'
                 : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'"
@@ -84,10 +84,10 @@
                     v-for="child in item.children"
                     :key="child.to"
                     :to="child.to"
-                    class="flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium transition"
+                    class="flex items-center gap-2 rounded-r-lg border-l-2 px-3 py-2 text-[13px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
                     :class="isActive(child.to)
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/30'
-                      : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'"
+                      ? 'border-blue-400 bg-white/10 text-white'
+                      : 'border-transparent text-slate-400 hover:bg-slate-800/80 hover:text-white'"
                   >
                     <span class="truncate">{{ child.label }}</span>
                   </RouterLink>
@@ -101,7 +101,7 @@
       <!-- Colapsar (solo escritorio) -->
       <button
         type="button"
-        class="hidden shrink-0 items-center justify-center gap-2 border-t border-slate-800 py-3 text-slate-400 transition hover:bg-slate-800/80 hover:text-white lg:flex"
+        class="hidden shrink-0 items-center justify-center gap-2 border-t border-slate-800 py-3 text-slate-400 transition hover:bg-slate-800/80 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400/60 lg:flex"
         @click="collapsed = !collapsed"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-300" :class="{ 'rotate-180': collapsed }" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -112,7 +112,7 @@
       <!-- Usuario -->
       <div class="shrink-0 border-t border-slate-800 p-3">
         <div class="flex items-center gap-3 rounded-lg px-2 py-2" :class="collapsed ? 'justify-center' : ''">
-          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-semibold text-white">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
             US
           </div>
           <div v-if="!collapsed" class="min-w-0 flex-1">
@@ -123,7 +123,7 @@
             v-if="!collapsed"
             type="button"
             title="Cerrar sesión"
-            class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+            class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
             @click="handleLogout"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -141,7 +141,7 @@
         <div class="flex items-center gap-3">
           <button
             type="button"
-            class="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 lg:hidden"
+            class="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 lg:hidden"
             @click="mobileOpen = true"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -167,18 +167,18 @@
           </div>
 
           <!-- Notificaciones -->
-          <button type="button" class="relative rounded-lg p-2 text-slate-500 transition hover:bg-slate-100">
+          <button type="button" title="Notificaciones" aria-label="Notificaciones" class="relative rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
             </svg>
-            <span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600"></span>
+            <span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-blue-600"></span>
           </button>
 
           <div class="h-8 w-px bg-slate-200"></div>
 
           <!-- Avatar -->
           <div class="flex items-center gap-2">
-            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-semibold text-white">
+            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
               US
             </div>
             <span class="hidden text-sm font-medium text-slate-700 sm:block">Usuario</span>
@@ -193,12 +193,15 @@
         </div>
       </main>
     </div>
+
+    <ToastHost />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
+import ToastHost from '@/components/ui/ToastHost.vue'
 
 interface NavChild {
   label: string
@@ -241,31 +244,21 @@ const navItems: NavItem[] = [
     icon: 'M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9',
     children: [
       { label: 'Lista de Bienes', to: '/dashboard/bienes' },
-      { label: 'Asignación/Reasignación', to: '/dashboard/bienes/asignacion' },
       { label: 'Hojas de resguardo y entrega', to: '/dashboard/bienes/hojas' },
-      { label: 'Agregar un tipo de bien', to: '/dashboard/bienes/tipos/nuevo' },
+      { label: 'Agregar un tipo de bien', to: '/dashboard/bienes/tipos-bien' },
     ],
   },
   {
-    type: 'group',
+    type: 'link',
     label: 'Mantenimiento',
+    to: '/dashboard/mantenimiento',
     icon: 'M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L1.5 3l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z',
-    children: [
-      { label: 'Preventivo', to: '/dashboard/mantenimiento/preventivo' },
-      { label: 'Correctivo', to: '/dashboard/mantenimiento/correctivo' },
-      { label: 'Dictámenes', to: '/dashboard/mantenimiento/dictamenes' },
-    ],
   },
   {
-    type: 'group',
+    type: 'link',
     label: 'Administración',
+    to: '/dashboard/administracion',
     icon: 'M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21',
-    children: [
-      { label: 'Ubicación', to: '/dashboard/administracion/ubicacion' },
-      { label: 'Dirección', to: '/dashboard/administracion/direccion' },
-      { label: 'Departamento', to: '/dashboard/administracion/departamento' },
-      { label: 'Usuarios', to: '/dashboard/administracion/usuarios' },
-    ],
   },
 ]
 

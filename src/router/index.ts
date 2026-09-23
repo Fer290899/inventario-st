@@ -35,15 +35,25 @@ const router = createRouter({
           component: () => import('../pages/Bienes.vue')
         },
         {
-          path: 'bienes/asignacion',
-          name: 'AsignarBienes',
-          component: () => import('../pages/AsignarBienes.vue')
-        },
-        {
           path: 'bienes/hojas',
           name: 'HojasBienes',
           component: () => import('../pages/HojasBienes.vue')
         },
+        {
+          path: 'bienes/tipos-bien',
+          name: 'TiposBien',
+          component: () => import('../pages/AgregarTipoBien.vue')
+        },
+        {
+          path: 'mantenimiento',
+          name: 'Mantenimiento',
+          component: () => import('../pages/Mantenimiento.vue')
+        },
+        {
+          path: 'administracion',
+          name: 'Administracion',
+          component: () => import('../pages/Administracion.vue')
+        }
       ]
     }
   ],

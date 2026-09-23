@@ -1,9 +1,28 @@
 @import "tailwindcss";
 
-/*
- * flowbite-vue no incluye sus clases Tailwind (ej. FwbCard) en el análisis
- * automático de contenido de Tailwind, porque el paquete llega pre-empaquetado
- * a través del bundler de dependencias de Vite. flowbite-vue distribuye su
- * propio CSS ya compilado con esas clases, así que lo importamos directamente.
- */
-@import "flowbite-vue/index.css";
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-slate-50 text-slate-800 antialiased;
+}
+
+@page {
+  size: letter;
+  margin: 15mm;
+}
+
+/* Al imprimir solo sale el documento de la vista previa; layout, modales y avisos se ocultan. */
+@media print {
+  body > *:not(.zona-impresion) {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}

@@ -1,4 +1,5 @@
 import { reactive } from 'vue'
+import { DEPARTAMENTOS_SEMILLA, DIRECCIONES_SEMILLA, UBICACIONES_SEMILLA } from './catalogosSemilla'
 
 export type EstatusBien = 'Asignado' | 'Por asignar' | 'En reparación' | 'Baja'
 
@@ -26,6 +27,16 @@ export interface Bien {
   ubicacion?: string
   direccion?: string
   departamento?: string
+  /** Custodia vigente: persona que tiene el bien. Solo existe si `estatus === 'Asignado'`. */
+  responsable?: string
+}
+
+/** Copia fija de los datos del bien al emitir un documento (hoja, dictamen): editar el bien después no la altera. */
+export type BienSnapshot = Pick<Bien, 'id' | 'nombre' | 'marca' | 'modelo' | 'numeroSerie' | 'numeroInventario' | 'caracteristicas'>
+
+export function snapshotDe(bien: Bien): BienSnapshot {
+  const { id, nombre, marca, modelo, numeroSerie, numeroInventario, caracteristicas } = bien
+  return { id, nombre, marca, modelo, numeroSerie, numeroInventario, caracteristicas }
 }
 
 type Plantilla = Pick<Bien, 'nombre' | 'modelo' | 'marca' | 'caracteristicas' | 'mesesGarantia' | 'inventariable'>
@@ -47,14 +58,8 @@ const PLANTILLAS: Plantilla[] = [
 
 const ESTATUS_OPCIONES: EstatusBien[] = ['Asignado', 'Asignado', 'Asignado', 'Por asignar', 'En reparación', 'Baja']
 
-// Catálogos de ejemplo para el formulario de alta de bienes.
-// TODO: reemplazar por los catálogos reales del módulo de Administración
-// (Ubicación, Dirección, Departamento) una vez que existan.
-export const TIPOS_BIEN_OPCIONES = [...new Set(PLANTILLAS.map((plantilla) => plantilla.nombre))]
+// Ubicación, dirección y departamento viven en el módulo de Administración (useCatalogosData).
 export const ORIGEN_OPCIONES = ['Compra directa', 'Licitación', 'Donación', 'Comodato', 'Transferencia interna']
-export const UBICACION_OPCIONES = ['Edificio Central - Piso 1', 'Edificio Central - Piso 2', 'Bodega General', 'Anexo Norte', 'Anexo Sur']
-export const DIRECCION_OPCIONES = ['Dirección General', 'Dirección de Administración', 'Dirección de Sistemas', 'Dirección Jurídica', 'Dirección de Finanzas']
-export const DEPARTAMENTO_OPCIONES = ['Recursos Humanos', 'Tecnologías de la Información', 'Contabilidad', 'Mantenimiento', 'Compras']
 
 export interface FiltrosBienes {
   /** '' significa "todos los tipos" */
@@ -65,6 +70,8 @@ export interface FiltrosBienes {
   ubicacion: string
   direccion: string
   departamento: string
+  /** '' significa "todos los responsables" */
+  responsable: string
   /** Fecha ISO (YYYY-MM-DD) o '' si no aplica */
   fechaAltaDesde: string
   /** Fecha ISO (YYYY-MM-DD) o '' si no aplica */
@@ -79,6 +86,7 @@ export function filtrosVacios(): FiltrosBienes {
     ubicacion: '',
     direccion: '',
     departamento: '',
+    responsable: '',
     fechaAltaDesde: '',
     fechaAltaHasta: '',
   }
@@ -113,9 +121,9 @@ function generateBienes(count: number): Bien[] {
       fechaAlta: randomFechaAlta(),
       estatus: randomFrom(ESTATUS_OPCIONES),
       origen: randomFrom(ORIGEN_OPCIONES),
-      ubicacion: randomFrom(UBICACION_OPCIONES),
-      direccion: randomFrom(DIRECCION_OPCIONES),
-      departamento: randomFrom(DEPARTAMENTO_OPCIONES),
+      ubicacion: randomFrom(UBICACIONES_SEMILLA),
+      direccion: randomFrom(DIRECCIONES_SEMILLA),
+      departamento: randomFrom(DEPARTAMENTOS_SEMILLA),
     })
   }
 
@@ -136,5 +144,12 @@ export function useBienesData() {
     bienes.unshift({ id: `bien-${Date.now()}`, ...datos })
   }
 
-  return { bienes, agregarBien }
+  function actualizarBien(id: string, datos: Partial<Omit<Bien, 'id' | 'estatus' | 'responsable'>>) {
+    // TODO: reemplazar por la llamada real al servicio de bienes,
+    // ej. await bienesApi.actualizarBien(id, datos)
+    const bien = bienes.find((item) => item.id === id)
+    if (bien) Object.assign(bien, datos)
+  }
+
+  return { bienes, agregarBien, actualizarBien }
 }

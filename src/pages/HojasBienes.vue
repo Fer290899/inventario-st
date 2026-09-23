@@ -3,16 +3,12 @@
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 class="text-2xl font-bold text-slate-800">Hojas de resguardo y entrega</h2>
-        <p class="mt-1 text-sm text-slate-500">Historial de documentos generados por cada asignación y reasignación</p>
+        <p class="mt-1 text-sm text-slate-500">Historial de documentos generados por cada asignación, reasignación y devolución</p>
       </div>
 
       <!-- Exportar a Excel (con variantes) -->
       <div ref="menuExportarRef" class="relative">
-        <button
-          type="button"
-          class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-          @click="mostrarMenuExportar = !mostrarMenuExportar"
-        >
+        <AppButton variant="secondary" :aria-expanded="mostrarMenuExportar" @click="mostrarMenuExportar = !mostrarMenuExportar">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
           </svg>
@@ -20,22 +16,22 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400 transition-transform" :class="{ 'rotate-180': mostrarMenuExportar }" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
           </svg>
-        </button>
+        </AppButton>
 
         <Transition name="fade">
           <div
             v-if="mostrarMenuExportar"
             class="absolute right-0 z-20 mt-2 w-64 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
           >
-            <button type="button" class="block w-full px-4 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50" @click="exportarExcel('visibles')">
+            <button type="button" class="block w-full px-4 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none" @click="exportarExcel('visibles')">
               Excel con los filtros aplicados
               <span class="block text-xs text-slate-400">{{ hojasFiltradas.length }} hojas visibles ahora</span>
             </button>
-            <button type="button" class="block w-full px-4 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50" @click="exportarExcel('Resguardo')">
+            <button type="button" class="block w-full px-4 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none" @click="exportarExcel('Resguardo')">
               Excel de hojas de resguardo
               <span class="block text-xs text-slate-400">Todas, ignora búsqueda y filtros</span>
             </button>
-            <button type="button" class="block w-full px-4 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50" @click="exportarExcel('Entrega')">
+            <button type="button" class="block w-full px-4 py-2.5 text-left text-sm text-slate-600 transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none" @click="exportarExcel('Entrega')">
               Excel de hojas de entrega
               <span class="block text-xs text-slate-400">Todas, ignora búsqueda y filtros</span>
             </button>
@@ -46,19 +42,20 @@
 
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
       <!-- Pestañas por tipo de hoja -->
-      <div class="border-b border-slate-200 px-4 pt-4">
+      <div class="overflow-x-auto border-b border-slate-200 px-4 pt-4">
         <div class="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
           <button
             v-for="pestana in PESTANAS"
             :key="pestana.valor"
             type="button"
-            class="flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-medium transition"
+            class="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 sm:px-4"
             :class="tipoActivo === pestana.valor ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+            :aria-pressed="tipoActivo === pestana.valor"
             @click="tipoActivo = pestana.valor"
           >
             {{ pestana.etiqueta }}
             <span
-              class="rounded-full px-1.5 py-0.5 text-[11px] font-semibold"
+              class="rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
               :class="tipoActivo === pestana.valor ? 'bg-blue-50 text-blue-700' : 'bg-slate-200/70 text-slate-500'"
             >
               {{ conteos[pestana.valor] }}
@@ -70,48 +67,17 @@
 
       <!-- Controles: tamaño de página + buscador + filtros -->
       <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex items-center gap-2 text-sm text-slate-600">
-          <span>Mostrar</span>
-          <div class="relative">
-            <select
-              v-model.number="pageSize"
-              class="m-0 appearance-none rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-2.5 pr-7 text-sm font-medium text-slate-600 shadow-none outline-none transition focus:border-blue-400/60 focus:bg-white focus:ring-2 focus:ring-blue-500/30"
-            >
-              <option v-for="opcion in PAGE_SIZE_OPCIONES" :key="opcion" :value="opcion">{{ opcion }}</option>
-            </select>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="2"
-              stroke="currentColor"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
-          </div>
-          <span>elementos</span>
-        </div>
+        <PageSizeSelect v-model="pageSize" />
 
         <div class="flex items-center gap-2">
-          <div class="relative w-full sm:w-72">
-            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-            </span>
-            <input
-              v-model="busqueda"
-              type="text"
-              placeholder="Buscar por folio, usuario, dirección..."
-              class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-400/60 focus:bg-white focus:ring-2 focus:ring-blue-500/30"
-            />
-          </div>
+          <SearchInput v-model="busqueda" placeholder="Buscar por folio, usuario, dirección..." class="w-full sm:w-72" />
 
           <button
             type="button"
-            class="relative flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-            :class="hayFiltrosActivos ? 'border-blue-400/60 bg-blue-50 text-blue-700' : ''"
+            class="relative flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-1"
+            :class="hayFiltrosActivos
+              ? 'border-blue-400/60 bg-blue-50 text-blue-700 hover:bg-blue-100'
+              : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'"
             @click="mostrarModalFiltros = true"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -126,7 +92,7 @@
       <!-- Tabla -->
       <div class="max-h-[600px] overflow-auto">
         <table class="w-full text-left text-sm">
-          <thead class="sticky top-0 z-10 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-[0_1px_0_0] shadow-slate-200">
+          <thead class="sticky top-0 z-10 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 shadow-[0_1px_0_0] shadow-slate-200">
             <tr>
               <th class="whitespace-nowrap px-4 py-3">Tipo</th>
               <th class="whitespace-nowrap px-4 py-3">Folio</th>
@@ -136,28 +102,30 @@
               <th class="whitespace-nowrap px-4 py-3">Dirección</th>
               <th class="whitespace-nowrap px-4 py-3">Departamento</th>
               <th class="whitespace-nowrap px-4 py-3">Fecha</th>
+              <th class="whitespace-nowrap px-4 py-3">Asignó</th>
               <th class="whitespace-nowrap px-4 py-3">Bienes</th>
               <th class="whitespace-nowrap px-4 py-3">Acciones</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             <tr v-for="hoja in hojasPagina" :key="hoja.id" class="transition hover:bg-slate-50">
-              <td class="whitespace-nowrap px-4 py-3">
+              <td class="whitespace-nowrap px-4 py-2.5">
                 <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="TIPO_HOJA_ESTILOS[hoja.tipo]">
                   {{ hoja.tipo }}
                 </span>
               </td>
-              <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-800">{{ hoja.folio }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ hoja.movimiento }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ hoja.persona }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ hoja.puesto ?? '—' }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ hoja.direccion }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ hoja.departamento }}</td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ formatFecha(hoja.fecha) }}</td>
-              <td class="whitespace-nowrap px-4 py-3">
+              <td class="whitespace-nowrap px-4 py-2.5 font-mono text-xs font-medium tabular-nums text-slate-800">{{ hoja.folio }}</td>
+              <td class="whitespace-nowrap px-4 py-2.5 text-slate-600">{{ hoja.movimiento }}</td>
+              <td class="whitespace-nowrap px-4 py-2.5 font-medium text-slate-800">{{ hoja.persona }}</td>
+              <td class="whitespace-nowrap px-4 py-2.5 text-slate-600">{{ hoja.puesto ?? '—' }}</td>
+              <td class="whitespace-nowrap px-4 py-2.5 text-slate-600">{{ hoja.direccion }}</td>
+              <td class="whitespace-nowrap px-4 py-2.5 text-slate-600">{{ hoja.departamento }}</td>
+              <td class="whitespace-nowrap px-4 py-2.5 tabular-nums text-slate-600">{{ formatFecha(hoja.fecha) }}</td>
+              <td class="whitespace-nowrap px-4 py-2.5 text-slate-600">{{ hoja.asignadoPor }}</td>
+              <td class="whitespace-nowrap px-4 py-2.5">
                 <button
                   type="button"
-                  class="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition hover:border-blue-400/60 hover:bg-blue-50"
+                  class="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition hover:border-blue-400/60 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                   @click="verBienes(hoja)"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -167,112 +135,48 @@
                   {{ hoja.bienesIds.length }} {{ hoja.bienesIds.length === 1 ? 'bien' : 'bienes' }}
                 </button>
               </td>
-              <td class="whitespace-nowrap px-4 py-3">
-                <button
-                  type="button"
-                  :title="`Imprimir hoja de ${hoja.tipo.toLowerCase()}`"
-                  :aria-label="`Imprimir hoja de ${hoja.tipo.toLowerCase()}`"
-                  class="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-                  @click="imprimirHoja(hoja)"
-                >
+              <td class="whitespace-nowrap px-4 py-2.5">
+                <IconButton :label="`Imprimir hoja de ${hoja.tipo.toLowerCase()}`" tone="slate" @click="imprimirHoja(hoja)">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
                   </svg>
-                </button>
+                </IconButton>
               </td>
             </tr>
 
             <tr v-if="hojasPagina.length === 0">
-              <td colspan="10" class="px-4 py-12 text-center text-sm text-slate-400">
-                No se encontraron hojas que coincidan con la búsqueda o los filtros.
+              <td colspan="11">
+                <EmptyState mensaje="No se encontraron hojas que coincidan con la búsqueda o los filtros." />
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Paginación -->
-      <div class="flex flex-col gap-3 border-t border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <p class="text-sm text-slate-500">
-          Mostrando {{ rangoInicio }} a {{ rangoFin }} de {{ hojasFiltradas.length }} elementos
-        </p>
-
-        <div class="flex items-center gap-1">
-          <button
-            type="button"
-            title="Primera página"
-            aria-label="Primera página"
-            class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-            :disabled="paginaActual === 1"
-            @click="paginaActual = 1"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5M11.25 19.5l-7.5-7.5 7.5-7.5" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            title="Página anterior"
-            aria-label="Página anterior"
-            class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-            :disabled="paginaActual === 1"
-            @click="paginaActual -= 1"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-          </button>
-
-          <template v-for="(pagina, index) in numerosPagina" :key="`${pagina}-${index}`">
-            <span v-if="pagina === '…'" class="px-2 text-slate-400">…</span>
-            <button
-              v-else
-              type="button"
-              class="h-8 w-8 rounded-lg text-sm font-medium transition"
-              :class="pagina === paginaActual
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/30'
-                : 'text-slate-600 hover:bg-slate-100'"
-              @click="paginaActual = pagina"
-            >
-              {{ pagina }}
-            </button>
-          </template>
-
-          <button
-            type="button"
-            title="Página siguiente"
-            aria-label="Página siguiente"
-            class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-            :disabled="paginaActual === totalPaginas"
-            @click="paginaActual += 1"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            title="Última página"
-            aria-label="Última página"
-            class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-            :disabled="paginaActual === totalPaginas"
-            @click="paginaActual = totalPaginas"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 4.5l7.5 7.5-7.5 7.5M12.75 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-          </button>
-        </div>
-      </div>
+      <TablePagination
+        v-model:pagina-actual="paginaActual"
+        :total-paginas="totalPaginas"
+        :rango-inicio="rangoInicio"
+        :rango-fin="rangoFin"
+        :total="total"
+      />
     </div>
 
     <BienesAsignadosModal
       v-model:open="mostrarModalBienes"
       :titulo="hojaSeleccionada ? `Bienes de la hoja ${hojaSeleccionada.folio}` : 'Bienes de la hoja'"
       :persona="hojaSeleccionada?.persona ?? ''"
-      :bienes="bienesDe(hojaSeleccionada?.bienesIds ?? [])"
+      :bienes="hojaSeleccionada?.bienes ?? []"
     />
     <FiltrosHojasModal v-model:open="mostrarModalFiltros" :filtros="filtros" @aplicar="onAplicarFiltros" />
+
+    <VistaPreviaDocumento
+      v-model:open="mostrarVistaPrevia"
+      :title="hojaImpresion ? `Hoja de ${hojaImpresion.tipo.toLowerCase()} ${hojaImpresion.folio}` : 'Hoja'"
+      :subtitle="hojaImpresion?.persona"
+    >
+      <DocumentoHoja v-if="hojaImpresion" :hoja="hojaImpresion" />
+    </VistaPreviaDocumento>
   </div>
 </template>
 
@@ -280,16 +184,27 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
   filtrosHojasVacios,
-  useAsignacionesData,
+  useMovimientosData,
   type FiltrosHojas,
   type Hoja,
   type TipoHoja,
-} from '@/composables/useAsignacionesData'
+} from '@/composables/useMovimientosData'
+import { usePaginacion } from '@/composables/usePaginacion'
+import { useToast } from '@/composables/useToast'
 import { descargarCsv } from '@/utils/csv'
 import BienesAsignadosModal from '@/components/asignaciones/BienesAsignadosModal.vue'
+import DocumentoHoja from '@/components/documentos/DocumentoHoja.vue'
+import VistaPreviaDocumento from '@/components/documentos/VistaPreviaDocumento.vue'
 import FiltrosHojasModal from '@/components/hojas/FiltrosHojasModal.vue'
+import AppButton from '@/components/ui/AppButton.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
+import IconButton from '@/components/ui/IconButton.vue'
+import PageSizeSelect from '@/components/ui/PageSizeSelect.vue'
+import SearchInput from '@/components/ui/SearchInput.vue'
+import TablePagination from '@/components/ui/TablePagination.vue'
 
-const { hojas, bienesDe } = useAsignacionesData()
+const { hojas } = useMovimientosData()
+const toast = useToast()
 
 type PestanaTipo = TipoHoja | 'todas'
 
@@ -304,12 +219,9 @@ const TIPO_HOJA_ESTILOS: Record<TipoHoja, string> = {
   Entrega: 'bg-amber-50 text-amber-700',
 }
 
-const PAGE_SIZE_OPCIONES = [10, 25, 50, 100] as const
-
 const tipoActivo = ref<PestanaTipo>('todas')
 const busqueda = ref('')
-const pageSize = ref<(typeof PAGE_SIZE_OPCIONES)[number]>(10)
-const paginaActual = ref(1)
+const pageSize = ref(10)
 
 const mostrarModalFiltros = ref(false)
 const filtros = ref<FiltrosHojas>(filtrosHojasVacios())
@@ -371,40 +283,13 @@ const hojasFiltradas = computed(() =>
   tipoActivo.value === 'todas' ? hojasBase.value : hojasBase.value.filter((hoja) => hoja.tipo === tipoActivo.value),
 )
 
-const totalPaginas = computed(() => Math.max(1, Math.ceil(hojasFiltradas.value.length / pageSize.value)))
+const { paginaActual, totalPaginas, pagina: hojasPagina, rangoInicio, rangoFin, total, irAlInicio } = usePaginacion(
+  hojasFiltradas,
+  pageSize,
+)
 
-const hojasPagina = computed(() => {
-  const inicio = (paginaActual.value - 1) * pageSize.value
-  return hojasFiltradas.value.slice(inicio, inicio + pageSize.value)
-})
-
-const rangoInicio = computed(() => (hojasFiltradas.value.length === 0 ? 0 : (paginaActual.value - 1) * pageSize.value + 1))
-const rangoFin = computed(() => Math.min(paginaActual.value * pageSize.value, hojasFiltradas.value.length))
-
-// Vuelve a la primera página cuando cambia la pestaña, la búsqueda, los filtros o el tamaño de página.
-watch([tipoActivo, busqueda, pageSize, filtros], () => {
-  paginaActual.value = 1
-})
-
-// Si la página actual queda fuera de rango, la ajusta.
-watch(totalPaginas, (total) => {
-  if (paginaActual.value > total) paginaActual.value = total
-})
-
-const numerosPagina = computed<Array<number | '…'>>(() => {
-  const total = totalPaginas.value
-  const actual = paginaActual.value
-  const izquierda = Math.max(2, actual - 1)
-  const derecha = Math.min(total - 1, actual + 1)
-
-  const paginas: Array<number | '…'> = [1]
-  if (izquierda > 2) paginas.push('…')
-  for (let p = izquierda; p <= derecha; p += 1) paginas.push(p)
-  if (derecha < total - 1) paginas.push('…')
-  if (total > 1) paginas.push(total)
-
-  return paginas
-})
+// Vuelve a la primera página cuando cambia la pestaña, la búsqueda o los filtros.
+watch([tipoActivo, busqueda, filtros], irAlInicio)
 
 const dateFormatter = new Intl.DateTimeFormat('es', { day: '2-digit', month: '2-digit', year: 'numeric' })
 function formatFecha(fechaIso: string): string {
@@ -419,9 +304,12 @@ function verBienes(hoja: Hoja) {
   mostrarModalBienes.value = true
 }
 
+const mostrarVistaPrevia = ref(false)
+const hojaImpresion = ref<Hoja | null>(null)
+
 function imprimirHoja(hoja: Hoja) {
-  // TODO: generar/mostrar la hoja imprimible cuando exista
-  console.info(`Imprimir hoja de ${hoja.tipo}`, hoja.folio)
+  hojaImpresion.value = hoja
+  mostrarVistaPrevia.value = true
 }
 
 // Menú desplegable "Exportar a Excel" — se cierra al hacer clic fuera de él.
@@ -441,7 +329,7 @@ function exportarExcel(variante: 'visibles' | TipoHoja) {
   const lista = variante === 'visibles' ? hojasFiltradas.value : hojas.filter((hoja) => hoja.tipo === variante)
   const sufijo = variante === 'visibles' ? 'filtradas' : variante.toLowerCase()
 
-  const encabezados = ['Tipo', 'Folio', 'Movimiento', 'Usuario', 'Puesto', 'Dirección', 'Departamento', 'Fecha', 'Bienes', 'Números de inventario']
+  const encabezados = ['Tipo', 'Folio', 'Movimiento', 'Usuario', 'Puesto', 'Dirección', 'Departamento', 'Fecha', 'Asignó', 'Bienes', 'Números de inventario']
   const filas = lista.map((hoja) => [
     hoja.tipo,
     hoja.folio,
@@ -451,13 +339,13 @@ function exportarExcel(variante: 'visibles' | TipoHoja) {
     hoja.direccion,
     hoja.departamento,
     formatFecha(hoja.fecha),
+    hoja.asignadoPor,
     String(hoja.bienesIds.length),
-    bienesDe(hoja.bienesIds)
-      .map((bien) => bien.numeroInventario)
-      .join('; '),
+    hoja.bienes.map((bien) => bien.numeroInventario).join('; '),
   ])
 
   descargarCsv(encabezados, filas, `hojas_${sufijo}`)
+  toast.success(`Exportación lista: ${lista.length} hojas`)
   mostrarMenuExportar.value = false
 }
 </script>

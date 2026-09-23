@@ -6,46 +6,40 @@
       </svg>
     </template>
 
-    <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-3">
-      <!-- Movimiento + Usuario -->
+    <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
       <div class="space-y-4">
         <div>
-          <label class="mb-1.5 block text-sm font-semibold text-slate-700">Movimiento</label>
-          <BaseSelect v-model="draft.movimiento">
-            <option value="">Todos los movimientos</option>
-            <option v-for="opcion in MOVIMIENTOS" :key="opcion" :value="opcion">{{ opcion }}</option>
+          <label class="mb-1.5 block text-sm font-semibold text-slate-700">Tipo</label>
+          <BaseSelect v-model="draft.tipo">
+            <option value="">Todos los tipos</option>
+            <option v-for="opcion in TIPOS" :key="opcion" :value="opcion">{{ opcion }}</option>
           </BaseSelect>
         </div>
         <div>
-          <label class="mb-1.5 block text-sm font-semibold text-slate-700">Usuario</label>
-          <BaseSelect v-model="draft.persona">
-            <option value="">Todos los usuarios</option>
-            <option v-for="opcion in todas.usuarios" :key="opcion" :value="opcion">{{ opcion }}</option>
+          <label class="mb-1.5 block text-sm font-semibold text-slate-700">Estatus</label>
+          <BaseSelect v-model="draft.estatus">
+            <option value="">Todos los estatus</option>
+            <option v-for="opcion in ESTATUS_LISTA" :key="opcion" :value="opcion">{{ opcion }}</option>
+          </BaseSelect>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-semibold text-slate-700">Técnico / proveedor</label>
+          <BaseSelect v-model="draft.tecnico">
+            <option value="">Todos</option>
+            <option v-for="opcion in TECNICOS_OPCIONES" :key="opcion" :value="opcion">{{ opcion }}</option>
+          </BaseSelect>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-semibold text-slate-700">Prioridad</label>
+          <BaseSelect v-model="draft.prioridad">
+            <option value="">Todas (solo aplica a Correctivo)</option>
+            <option v-for="opcion in PRIORIDADES" :key="opcion" :value="opcion">{{ opcion }}</option>
           </BaseSelect>
         </div>
       </div>
 
-      <!-- Ubicación administrativa -->
-      <div class="space-y-4">
-        <div>
-          <label class="mb-1.5 block text-sm font-semibold text-slate-700">Dirección</label>
-          <BaseSelect v-model="draft.direccion">
-            <option value="">Todas las direcciones</option>
-            <option v-for="opcion in todas.direcciones" :key="opcion" :value="opcion">{{ opcion }}</option>
-          </BaseSelect>
-        </div>
-        <div>
-          <label class="mb-1.5 block text-sm font-semibold text-slate-700">Departamento</label>
-          <BaseSelect v-model="draft.departamento">
-            <option value="">Todos los departamentos</option>
-            <option v-for="opcion in todas.departamentos" :key="opcion" :value="opcion">{{ opcion }}</option>
-          </BaseSelect>
-        </div>
-      </div>
-
-      <!-- Fecha -->
       <div>
-        <h4 class="mb-2 text-sm font-semibold text-slate-700">Fecha de la hoja</h4>
+        <h4 class="mb-2 text-sm font-semibold text-slate-700">Fecha del mantenimiento</h4>
         <div class="space-y-3">
           <div>
             <label class="mb-1 block text-xs font-medium text-slate-500">De</label>
@@ -61,7 +55,7 @@
 
     <template #footer>
       <div class="flex w-full items-center justify-between gap-2">
-        <AppButton variant="ghost" size="sm" @click="draft = filtrosHojasVacios()">Limpiar filtros</AppButton>
+        <AppButton variant="ghost" size="sm" @click="draft = filtrosMantenimientoVacios()">Limpiar filtros</AppButton>
         <div class="flex items-center gap-2">
           <AppButton variant="secondary" @click="cancelar">Cancelar</AppButton>
           <AppButton @click="aplicar">Aplicar filtros</AppButton>
@@ -73,30 +67,36 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useCatalogosData } from '@/composables/useCatalogosData'
-import { filtrosHojasVacios, type FiltrosHojas, type TipoMovimiento } from '@/composables/useMovimientosData'
+import {
+  TECNICOS_OPCIONES,
+  filtrosMantenimientoVacios,
+  type EstatusMantenimiento,
+  type FiltrosMantenimiento,
+  type Prioridad,
+  type TipoMantenimiento,
+} from '@/composables/useMantenimientosData'
 import AppButton from '@/components/ui/AppButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
-
-const { todas } = useCatalogosData()
 
 const INPUT =
   'w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-400/60 focus:bg-white focus:ring-2 focus:ring-blue-500/30'
 
 const props = defineProps<{
-  filtros: FiltrosHojas
+  filtros: FiltrosMantenimiento
 }>()
 
 const open = defineModel<boolean>('open', { required: true })
 
 const emit = defineEmits<{
-  aplicar: [filtros: FiltrosHojas]
+  aplicar: [filtros: FiltrosMantenimiento]
 }>()
 
-const MOVIMIENTOS: TipoMovimiento[] = ['Asignación', 'Reasignación', 'Devolución']
+const TIPOS: TipoMantenimiento[] = ['Preventivo', 'Correctivo']
+const ESTATUS_LISTA: EstatusMantenimiento[] = ['Programado', 'En curso', 'Concluido', 'Cancelado']
+const PRIORIDADES: Prioridad[] = ['Baja', 'Media', 'Alta', 'Urgente']
 
-const draft = ref<FiltrosHojas>({ ...props.filtros })
+const draft = ref<FiltrosMantenimiento>({ ...props.filtros })
 
 // Cada vez que se abre, arranca desde los filtros ya aplicados.
 watch(open, (isOpen) => {

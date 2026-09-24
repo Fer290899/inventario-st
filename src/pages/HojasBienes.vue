@@ -70,7 +70,7 @@
         <PageSizeSelect v-model="pageSize" />
 
         <div class="flex items-center gap-2">
-          <SearchInput v-model="busqueda" placeholder="Buscar por folio, usuario, dirección..." class="w-full sm:w-72" />
+          <SearchInput v-model="busqueda" placeholder="Buscar por folio, responsable, dirección..." class="w-full sm:w-72" />
 
           <button
             type="button"
@@ -97,7 +97,7 @@
               <th class="whitespace-nowrap px-4 py-3">Tipo</th>
               <th class="whitespace-nowrap px-4 py-3">Folio</th>
               <th class="whitespace-nowrap px-4 py-3">Movimiento</th>
-              <th class="whitespace-nowrap px-4 py-3">Usuario</th>
+              <th class="whitespace-nowrap px-4 py-3">Responsable</th>
               <th class="whitespace-nowrap px-4 py-3">Puesto</th>
               <th class="whitespace-nowrap px-4 py-3">Dirección</th>
               <th class="whitespace-nowrap px-4 py-3">Departamento</th>
@@ -329,7 +329,7 @@ function exportarExcel(variante: 'visibles' | TipoHoja) {
   const lista = variante === 'visibles' ? hojasFiltradas.value : hojas.filter((hoja) => hoja.tipo === variante)
   const sufijo = variante === 'visibles' ? 'filtradas' : variante.toLowerCase()
 
-  const encabezados = ['Tipo', 'Folio', 'Movimiento', 'Usuario', 'Puesto', 'Dirección', 'Departamento', 'Fecha', 'Asignó', 'Bienes', 'Números de inventario']
+  const encabezados = ['Tipo', 'Folio', 'Movimiento', 'Responsable', 'Puesto', 'Dirección', 'Departamento', 'Fecha', 'Asignó', 'Bienes', 'Números de inventario']
   const filas = lista.map((hoja) => [
     hoja.tipo,
     hoja.folio,

@@ -1,5 +1,5 @@
 <template>
-  <BaseModal v-model:open="open" :title="usuario ? 'Editar usuario' : 'Agregar usuario'" :subtitle="subtitulo" size="md">
+  <BaseModal v-model:open="open" :title="usuario ? 'Editar responsable' : 'Agregar responsable'" :subtitle="subtitulo" size="md">
     <template #icon>
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -36,13 +36,13 @@
       </div>
 
       <p class="text-xs text-slate-400 sm:col-span-2">
-        Es la ficha del usuario, solo informativa: al asignar bienes, el puesto, la dirección y el departamento se siguen capturando a mano.
+        Es la ficha del responsable, solo informativa: al asignar bienes, el puesto, la dirección y el departamento se siguen capturando a mano.
       </p>
     </form>
 
     <template #footer>
       <AppButton variant="secondary" @click="open = false">Cancelar</AppButton>
-      <AppButton type="submit" form="form-usuario" :disabled="!puedeGuardar">{{ usuario ? 'Guardar cambios' : 'Agregar usuario' }}</AppButton>
+      <AppButton type="submit" form="form-usuario" :disabled="!puedeGuardar">{{ usuario ? 'Guardar cambios' : 'Agregar responsable' }}</AppButton>
     </template>
   </BaseModal>
 </template>
@@ -84,7 +84,7 @@ watch(open, (isOpen) => {
   departamento.value = props.usuario?.departamento ?? ''
 })
 
-// Si la dirección/departamento actuales del usuario están inactivos, se siguen mostrando para poder editarlo.
+// Si la dirección/departamento actuales del responsable están inactivos, se siguen mostrando para poder editarlo.
 const opcionesDireccion = computed(() =>
   direccion.value && !activas.direcciones.includes(direccion.value) ? [direccion.value, ...activas.direcciones] : activas.direcciones,
 )
@@ -99,7 +99,7 @@ const subtitulo = computed(() =>
 )
 
 const error = computed(() =>
-  nombre.value.trim() !== '' && existeNombre('usuario', nombre.value, props.usuario?.id) ? 'Ya existe un usuario con ese nombre.' : '',
+  nombre.value.trim() !== '' && existeNombre('usuario', nombre.value, props.usuario?.id) ? 'Ya existe un responsable con ese nombre.' : '',
 )
 
 const puedeGuardar = computed(

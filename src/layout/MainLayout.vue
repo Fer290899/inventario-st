@@ -27,7 +27,7 @@
 
       <!-- Navegación -->
       <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        <template v-for="item in navItems" :key="item.label">
+        <template v-for="item in menu" :key="item.label">
           <!-- Enlace simple -->
           <RouterLink
             v-if="item.type === 'link'"
@@ -112,12 +112,12 @@
       <!-- Usuario -->
       <div class="shrink-0 border-t border-slate-800 p-3">
         <div class="flex items-center gap-3 rounded-lg px-2 py-2" :class="collapsed ? 'justify-center' : ''">
-          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-            US
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white" data-doc="avatar-sesion">
+            {{ iniciales }}
           </div>
           <div v-if="!collapsed" class="min-w-0 flex-1">
-            <p class="truncate text-sm font-medium text-white">Usuario</p>
-            <p class="truncate text-xs text-slate-400">Administrador</p>
+            <p class="truncate text-sm font-medium text-white" data-doc="nombre-sesion">{{ usuario?.nombre ?? 'Usuario' }}</p>
+            <p class="truncate text-xs text-slate-400" data-doc="rol-sesion">{{ usuario?.rol ?? '' }}</p>
           </div>
           <button
             v-if="!collapsed"
@@ -166,22 +166,17 @@
             />
           </div>
 
-          <!-- Notificaciones -->
-          <button type="button" title="Notificaciones" aria-label="Notificaciones" class="relative rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-            </svg>
-            <span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-blue-600"></span>
-          </button>
+          <!-- Alertas -->
+          <AlertasMenu />
 
           <div class="h-8 w-px bg-slate-200"></div>
 
           <!-- Avatar -->
           <div class="flex items-center gap-2">
             <div class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-              US
+              {{ iniciales }}
             </div>
-            <span class="hidden text-sm font-medium text-slate-700 sm:block">Usuario</span>
+            <span class="hidden text-sm font-medium text-slate-700 sm:block">{{ usuario?.nombre ?? 'Usuario' }}</span>
           </div>
         </div>
       </header>
@@ -193,19 +188,20 @@
         </div>
       </main>
     </div>
-
-    <ToastHost />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
-import ToastHost from '@/components/ui/ToastHost.vue'
+import AlertasMenu from '@/components/layout/AlertasMenu.vue'
+import { useAuth } from '@/composables/useAuth'
+import type { Permiso } from '@/config/permisos'
 
 interface NavChild {
   label: string
   to: string
+  permiso?: Permiso
 }
 
 interface NavLink {
@@ -213,6 +209,7 @@ interface NavLink {
   label: string
   to: string
   icon: string
+  permiso?: Permiso
 }
 
 interface NavGroup {
@@ -226,6 +223,7 @@ type NavItem = NavLink | NavGroup
 
 const route = useRoute()
 const router = useRouter()
+const { usuario, can, cerrarSesion } = useAuth()
 
 const collapsed = ref(false)
 const mobileOpen = ref(false)
@@ -245,7 +243,7 @@ const navItems: NavItem[] = [
     children: [
       { label: 'Lista de Bienes', to: '/dashboard/bienes' },
       { label: 'Hojas de resguardo y entrega', to: '/dashboard/bienes/hojas' },
-      { label: 'Agregar un tipo de bien', to: '/dashboard/bienes/tipos-bien' },
+      { label: 'Agregar un tipo de bien', to: '/dashboard/bienes/tipos-bien', permiso: 'tipos:gestionar' },
     ],
   },
   {
@@ -258,9 +256,22 @@ const navItems: NavItem[] = [
     type: 'link',
     label: 'Administración',
     to: '/dashboard/administracion',
+    permiso: 'admin:gestionar',
     icon: 'M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21',
   },
 ]
+
+// El menú solo ofrece lo que el rol puede abrir (el guard del router lo vuelve a comprobar).
+const menu = computed<NavItem[]>(() =>
+  navItems
+    .map((item) => (item.type === 'group' ? { ...item, children: item.children.filter((hijo) => !hijo.permiso || can(hijo.permiso)) } : item))
+    .filter((item) => (item.type === 'group' ? item.children.length > 0 : !item.permiso || can(item.permiso))),
+)
+
+const iniciales = computed(() => {
+  const nombre = usuario.value?.nombre ?? ''
+  return nombre.split(/\s+/).filter(Boolean).slice(0, 2).map((parte) => parte[0]!.toUpperCase()).join('') || 'US'
+})
 
 const pageTitle = computed(() => {
   const metaTitle = route.meta?.title as string | undefined
@@ -298,8 +309,7 @@ function toggleGroup(label: string) {
 }
 
 function handleLogout() {
-  // TODO: reemplazar por la llamada real a tu store de autenticación,
-  // ej. authStore.logout()
+  cerrarSesion()
   router.push('/login')
 }
 

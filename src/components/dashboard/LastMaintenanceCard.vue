@@ -16,7 +16,7 @@
       </div>
       <div class="flex items-center justify-between text-sm">
         <dt class="text-slate-500">Técnico</dt>
-        <dd class="font-medium text-slate-800">{{ tecnico }}</dd>
+        <dd class="font-medium text-slate-800">{{ tecnico ?? '—' }}</dd>
       </div>
     </dl>
   </div>
@@ -30,8 +30,9 @@ type MaintenanceAccent = 'amber' | 'rose'
 const props = defineProps<{
   title: string
   icon: string
-  fecha: string
-  tecnico: string
+  /** Fecha ISO (YYYY-MM-DD o con hora); null si aún no hay ninguno concluido */
+  fecha: string | null
+  tecnico: string | null
   accent: MaintenanceAccent
 }>()
 
@@ -44,9 +45,11 @@ const dateFormatter = new Intl.DateTimeFormat('es', {
   day: '2-digit',
   month: 'short',
   year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
 })
 
-const formattedDate = computed(() => dateFormatter.format(new Date(props.fecha)))
+const formattedDate = computed(() => {
+  if (!props.fecha) return 'Sin registros'
+  // Una fecha sin hora se parsearía como UTC y podría mostrarse un día antes.
+  return dateFormatter.format(new Date(props.fecha.length === 10 ? `${props.fecha}T00:00:00` : props.fecha))
+})
 </script>

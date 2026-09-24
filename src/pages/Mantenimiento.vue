@@ -6,7 +6,11 @@
         <p class="mt-1 text-sm text-slate-500">Preventivos, correctivos y los dictámenes de baja que se derivan de ellos</p>
       </div>
 
-      <AppButton @click="abrirProgramar">
+      <AppButton
+        :disabled="!can('mantenimiento:programar')"
+        :title="can('mantenimiento:programar') ? undefined : motivoSinPermiso('mantenimiento:programar', rol)"
+        @click="abrirProgramar"
+      >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
@@ -64,6 +68,8 @@
         </div>
       </div>
 
+      <FocoChip v-if="foco && tabActivo !== 'Dictámenes'" :etiqueta="FOCO_ETIQUETAS[foco]" @quitar="quitarFoco" />
+
       <!-- Tabla: Todas / Preventivo / Correctivo -->
       <template v-if="tabActivo !== 'Dictámenes'">
         <div class="max-h-[600px] overflow-auto">
@@ -112,7 +118,8 @@
                 <td class="whitespace-nowrap px-4 py-2.5">
                   <IconButton
                     v-if="registro.estatus === 'Programado' || registro.estatus === 'En curso'"
-                    label="Concluir mantenimiento"
+                    :label="can('mantenimiento:concluir') ? 'Concluir mantenimiento' : `Concluir mantenimiento (${motivoSinPermiso('mantenimiento:concluir', rol)})`"
+                    :disabled="!can('mantenimiento:concluir')"
                     tone="emerald"
                     @click="abrirConclusion(registro)"
                   >
@@ -223,6 +230,11 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
+import { motivoSinPermiso } from '@/config/permisos'
+import { FOCO_ETIQUETAS, useAlertasData } from '@/composables/useAlertasData'
+import { useFocoDeRuta } from '@/composables/useFocoDeRuta'
 import { useBienesData } from '@/composables/useBienesData'
 import {
   filtrosMantenimientoVacios,
@@ -246,6 +258,7 @@ import FiltrosMantenimientoModal from '@/components/mantenimiento/FiltrosManteni
 import ProgramarMantenimientoModal from '@/components/mantenimiento/ProgramarMantenimientoModal.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import FocoChip from '@/components/ui/FocoChip.vue'
 import IconButton from '@/components/ui/IconButton.vue'
 import PageSizeSelect from '@/components/ui/PageSizeSelect.vue'
 import SearchInput from '@/components/ui/SearchInput.vue'
@@ -264,7 +277,30 @@ const PESTANAS: Array<{ valor: Pestana; etiqueta: string }> = [
   { valor: 'Dictámenes', etiqueta: 'Dictámenes' },
 ]
 
-const tabActivo = ref<Pestana>('Todas')
+const route = useRoute()
+const { can, rol } = useAuth()
+
+function pestanaDeRuta(): Pestana | null {
+  const valor = route.query.tab
+  return PESTANAS.some((pestana) => pestana.valor === valor) ? (valor as Pestana) : null
+}
+
+const tabActivo = ref<Pestana>(pestanaDeRuta() ?? 'Todas')
+// Una alerta o tarjeta del dashboard puede llegar con la misma ruta pero otro `?tab=`.
+watch(() => route.query.tab, () => {
+  const pestana = pestanaDeRuta()
+  if (pestana) tabActivo.value = pestana
+})
+
+const { foco, limpiar: quitarFoco } = useFocoDeRuta([
+  'preventivo-vencido',
+  'preventivo-proximo',
+  'correctivo-atorado',
+  'preventivos-pendientes',
+  'correctivos-abiertos',
+])
+const { idsDeFoco } = useAlertasData()
+const idsEnFoco = computed(() => (foco.value ? idsDeFoco(foco.value) : null))
 
 const TIPO_ESTILOS: Record<TipoMantenimiento, string> = {
   Preventivo: 'bg-emerald-50 text-emerald-700',
@@ -357,7 +393,7 @@ const mantenimientosBase = computed<Mantenimiento[]>(() => {
       [registro.folio, bienDe(registro.bienId)?.nombre ?? '', registro.tecnico, registro.descripcion].some((campo) =>
         normalizar(campo).includes(termino),
       )
-    return coincideBusqueda && coincideConFiltros(registro)
+    return coincideBusqueda && coincideConFiltros(registro) && (!idsEnFoco.value || idsEnFoco.value.has(registro.id))
   })
 })
 

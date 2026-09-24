@@ -32,9 +32,11 @@
             v-for="opcion in RESULTADOS"
             :key="opcion"
             type="button"
-            class="rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+            class="rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 disabled:cursor-not-allowed disabled:opacity-50"
             :class="resultado === opcion ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
             :aria-pressed="resultado === opcion"
+            :disabled="opcion === 'No reparable' && !can('dictamen:emitir')"
+            :title="opcion === 'No reparable' && !can('dictamen:emitir') ? motivoSinPermiso('dictamen:emitir', rol) : undefined"
             @click="resultado = opcion"
           >
             {{ opcion }}
@@ -79,7 +81,8 @@
           </div>
           <div>
             <label class="mb-1.5 block text-sm font-semibold text-slate-700">Valor de reposición</label>
-            <input v-model.number="valorReposicion" type="number" min="0" step="0.01" placeholder="0.00" :class="INPUT_BLANCO" />
+            <input v-model.number="valorReposicion" type="number" min="0" step="0.01" placeholder="0.00" :class="INPUT_BLANCO" @input="valorSugerido = false" />
+            <p v-if="valorSugerido" class="mt-1 text-xs text-slate-500">Sugerido: valor de adquisición del bien.</p>
           </div>
         </div>
 
@@ -112,6 +115,8 @@
 </template>
 
 <script setup lang="ts">
+import { useAuth } from '@/composables/useAuth'
+import { motivoSinPermiso } from '@/config/permisos'
 import { computed, ref, watch } from 'vue'
 import { useBienesData } from '@/composables/useBienesData'
 import {
@@ -143,6 +148,8 @@ const INPUT =
 const INPUT_BLANCO =
   'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-400/60 focus:ring-2 focus:ring-blue-500/30'
 
+const { can, rol } = useAuth()
+
 const RESULTADOS: ResultadoCorrectivo[] = ['Reparado', 'No reparable']
 
 function hoy(): string {
@@ -158,6 +165,7 @@ const destinoFinal = ref<DestinoFinal | ''>('')
 const conclusionDictamen = ref('')
 const costoReparacion = ref<number | undefined>(undefined)
 const valorReposicion = ref<number | undefined>(undefined)
+const valorSugerido = ref(false)
 const elaboradoPor = ref('')
 
 // Cada vez que se abre, arranca desde un formulario limpio.
@@ -172,6 +180,7 @@ watch(open, (isOpen) => {
   conclusionDictamen.value = ''
   costoReparacion.value = undefined
   valorReposicion.value = undefined
+  valorSugerido.value = false
   elaboradoPor.value = ''
 })
 
@@ -179,6 +188,15 @@ const bien = computed(() => {
   if (!props.mantenimiento) return undefined
   const { bienes } = useBienesData()
   return bienes.find((item) => item.id === props.mantenimiento!.bienId)
+})
+
+// Al elegir "No reparable" se sugiere el valor de adquisición del bien como valor de reposición (editable).
+watch(resultado, (nuevo) => {
+  const valor = bien.value?.valorAdquisicion
+  if (nuevo === 'No reparable' && valor !== undefined && valorReposicion.value === undefined) {
+    valorReposicion.value = valor
+    valorSugerido.value = true
+  }
 })
 
 const subtitulo = computed(() => (props.mantenimiento ? `${props.mantenimiento.folio} · ${props.mantenimiento.tipo}` : ''))

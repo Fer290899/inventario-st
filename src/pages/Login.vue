@@ -112,6 +112,23 @@
             <span>{{ loading ? 'Ingresando...' : 'Iniciar sesión' }}</span>
           </button>
         </form>
+
+        <!-- Cuentas de prueba: solo en desarrollo -->
+        <div v-if="esDesarrollo" class="mt-6 rounded-lg border border-white/10 bg-white/5 px-4 py-3" data-doc="cuentas-demo">
+          <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">Cuentas de prueba</p>
+          <ul class="space-y-1">
+            <li v-for="cuenta in CUENTAS_DEMO" :key="cuenta.username">
+              <button
+                type="button"
+                class="flex w-full items-center justify-between gap-3 rounded-md px-2 py-1 text-left text-xs text-white/70 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50"
+                @click="usarCuenta(cuenta.username, cuenta.password)"
+              >
+                <span class="font-mono">{{ cuenta.username }} / {{ cuenta.password }}</span>
+                <span class="text-white/40">{{ cuenta.rol }}</span>
+              </button>
+            </li>
+          </ul>
+        </div>
       </div>
 
       <p class="mt-6 text-center text-xs text-white/40">
@@ -123,9 +140,15 @@
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
+import { CUENTAS_DEMO } from '@/services/authService'
 
 const router = useRouter()
+const route = useRoute()
+const { iniciarSesion } = useAuth()
+
+const esDesarrollo = import.meta.env.DEV
 
 const form = reactive({
   username: '',
@@ -137,6 +160,17 @@ const showPassword = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
 
+function usarCuenta(username: string, password: string) {
+  form.username = username
+  form.password = password
+}
+
+// Solo se acepta un destino interno del dashboard, para que ?redirect no sirva de redirección abierta.
+function destino(): string {
+  const pedido = route.query.redirect
+  return typeof pedido === 'string' && pedido.startsWith('/dashboard') ? pedido : '/dashboard'
+}
+
 async function handleLogin() {
   errorMessage.value = ''
 
@@ -147,13 +181,10 @@ async function handleLogin() {
 
   loading.value = true
   try {
-    // TODO: reemplazar por la llamada real a tu servicio/store de autenticación,
-    // por ejemplo: await authStore.login(form.username, form.password)
-    await new Promise((resolve) => setTimeout(resolve, 900))
-
-    router.push('/dashboard')
+    await iniciarSesion(form.username, form.password, form.remember)
+    await router.push(destino())
   } catch (error) {
-    errorMessage.value = 'Usuario o contraseña incorrectos.'
+    errorMessage.value = error instanceof Error ? error.message : 'No se pudo iniciar sesión.'
   } finally {
     loading.value = false
   }

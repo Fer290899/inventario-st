@@ -11,7 +11,7 @@
         <!-- Identificación -->
         <div>
           <label class="mb-1.5 block text-sm font-medium text-slate-700">Tipo de bien <span class="text-rose-500">*</span></label>
-          <BaseSelect v-model="form.tipoBien" required>
+          <BaseSelect v-model="tipoSeleccionado" required>
             <option value="" disabled>Selecciona un bien</option>
             <option v-for="tipo in opcionesTipo" :key="tipo" :value="tipo">{{ tipo }}</option>
           </BaseSelect>
@@ -27,11 +27,13 @@
 
         <div>
           <label class="mb-1.5 block text-sm font-medium text-slate-700">Número de serie <span class="text-rose-500">*</span></label>
-          <input v-model="form.numeroSerie" type="text" required placeholder="Ingresa el número de serie" :class="INPUT" />
+          <input v-model="form.numeroSerie" type="text" required placeholder="Ingresa el número de serie" :class="INPUT" :aria-invalid="errorSerie !== ''" />
+          <p v-if="errorSerie" role="alert" class="mt-1.5 text-xs text-rose-600" data-doc="error-serie">{{ errorSerie }}</p>
         </div>
         <div>
           <label class="mb-1.5 block text-sm font-medium text-slate-700">Número de inventario</label>
-          <input v-model="form.numeroInventario" type="text" placeholder="Número de inventario" :class="INPUT" />
+          <input v-model="form.numeroInventario" type="text" placeholder="Número de inventario" :class="INPUT" :aria-invalid="errorInventario !== ''" />
+          <p v-if="errorInventario" role="alert" class="mt-1.5 text-xs text-rose-600" data-doc="error-inventario">{{ errorInventario }}</p>
         </div>
         <div>
           <label class="mb-1.5 block text-sm font-medium text-slate-700">Fecha de alta</label>
@@ -84,6 +86,10 @@
 
         <!-- Detalles -->
         <div>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">Valor de adquisición (MXN)</label>
+          <input v-model.number="form.valorAdquisicion" type="number" min="0" step="0.01" placeholder="0.00" :class="INPUT" />
+        </div>
+        <div>
           <label class="mb-1.5 block text-sm font-medium text-slate-700">Meses de garantía</label>
           <input v-model.number="form.mesesGarantia" type="number" min="0" placeholder="0" :class="INPUT" />
         </div>
@@ -91,7 +97,7 @@
           <label class="mb-1.5 block text-sm font-medium text-slate-700">Mesa de ayuda</label>
           <input v-model="form.mesaAyuda" type="text" placeholder="Número de ticket" :class="INPUT" />
         </div>
-        <div class="flex items-end pb-2.5">
+        <div class="sm:col-span-2 lg:col-span-3">
           <label class="flex items-center gap-2 text-sm text-slate-700">
             <input
               v-model="form.inventariable"
@@ -102,13 +108,24 @@
           </label>
         </div>
 
-        <!-- Características -->
+        <!-- Características del tipo de bien -->
+        <fieldset v-if="definiciones.length > 0" class="sm:col-span-2 lg:col-span-3" data-doc="caracteristicas-tipo">
+          <legend class="mb-3 text-sm font-semibold text-slate-700">Características de {{ form.tipoBien }}</legend>
+          <div class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+            <CaracteristicaInput v-for="def in definiciones" :key="def.id" v-model="form.valores[def.id]" :def="def" :exigir="exigirRequeridas" />
+          </div>
+          <p v-if="bien && !exigirRequeridas" class="mt-2 text-xs text-slate-500">
+            Este bien se dio de alta con una descripción libre: completa las características cuando quieras; no son obligatorias al editarlo.
+          </p>
+        </fieldset>
+
+        <!-- Observaciones -->
         <div class="sm:col-span-2 lg:col-span-3">
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Características</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">Observaciones</label>
           <textarea
-            v-model="form.caracteristicas"
+            v-model="form.observaciones"
             rows="3"
-            placeholder="Describe las características del bien"
+            placeholder="Notas adicionales sobre el bien"
             class="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-400/60 focus:bg-white focus:ring-2 focus:ring-blue-500/30"
           ></textarea>
         </div>
@@ -117,7 +134,7 @@
 
     <template #footer>
       <AppButton variant="secondary" @click="cerrar">Cancelar</AppButton>
-      <AppButton type="submit" form="form-nuevo-bien">{{ bien ? 'Guardar cambios' : 'Guardar' }}</AppButton>
+      <AppButton type="submit" form="form-nuevo-bien" :disabled="errorSerie !== '' || errorInventario !== ''">{{ bien ? 'Guardar cambios' : 'Guardar' }}</AppButton>
     </template>
   </BaseModal>
 </template>
@@ -125,14 +142,17 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 import type { Bien } from '@/composables/useBienesData'
-import { ORIGEN_OPCIONES } from '@/composables/useBienesData'
+import { ORIGEN_OPCIONES, useBienesData } from '@/composables/useBienesData'
 import { useCatalogosData } from '@/composables/useCatalogosData'
 import { useTiposBienData } from '@/composables/useTiposBienData'
+import { resumirCaracteristicas, type ValorCaracteristica } from '@/utils/caracteristicas'
+import CaracteristicaInput from '@/components/bienes/CaracteristicaInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 
-const { nombresTipos } = useTiposBienData()
+const { nombresTipos, tipos } = useTiposBienData()
+const { existeNumeroSerie, existeNumeroInventario } = useBienesData()
 const { activas } = useCatalogosData()
 
 const ICONO_ALTA = 'M12 4.5v15m7.5-7.5h-15'
@@ -166,7 +186,10 @@ function formDesde(bien?: Bien | null) {
     numeroSerie: bien.numeroSerie,
     numeroInventario: bien.numeroInventario,
     fechaAlta: bien.fechaAlta,
-    caracteristicas: bien.caracteristicas,
+    // Un bien heredado (sin valores estructurados) conserva su texto libre como observaciones.
+    observaciones: bien.observaciones ?? (bien.valores ? '' : bien.caracteristicas),
+    valores: { ...bien.valores } as Record<string, ValorCaracteristica | undefined>,
+    valorAdquisicion: (bien.valorAdquisicion ?? '') as number | '',
     mesesGarantia: bien.mesesGarantia,
     inventariable: bien.inventariable,
     origen: bien.origen ?? '',
@@ -187,7 +210,9 @@ function formVacio() {
     numeroSerie: '',
     numeroInventario: '',
     fechaAlta: today(),
-    caracteristicas: '',
+    observaciones: '',
+    valores: {} as Record<string, ValorCaracteristica | undefined>,
+    valorAdquisicion: '' as number | '',
     mesesGarantia: 12,
     inventariable: true,
     origen: '',
@@ -206,6 +231,26 @@ const form = reactive(formVacio())
 watch(open, (isOpen) => {
   if (isOpen) Object.assign(form, formDesde(props.bien))
 })
+
+// Cambiar de tipo descarta los valores del tipo anterior (sus características no aplican).
+const tipoSeleccionado = computed({
+  get: () => form.tipoBien,
+  set: (valor: string) => {
+    if (valor !== form.tipoBien) form.valores = {}
+    form.tipoBien = valor
+  },
+})
+
+const definiciones = computed(() => tipos.find((tipo) => tipo.descripcion === form.tipoBien)?.caracteristicas ?? [])
+
+// Los bienes heredados (sin valores estructurados) no se bloquean por campos obligatorios al editarlos.
+const exigirRequeridas = computed(() => !props.bien || props.bien.valores !== undefined)
+
+// El número de serie y el de inventario identifican a un solo bien: no se admiten repetidos (alta ni edición).
+const errorSerie = computed(() => (existeNumeroSerie(form.numeroSerie, props.bien?.id) ? 'Ya existe otro bien con este número de serie.' : ''))
+const errorInventario = computed(() =>
+  existeNumeroInventario(form.numeroInventario, props.bien?.id) ? 'Ya existe otro bien con este número de inventario.' : '',
+)
 
 const titulo = computed(() => (props.bien ? 'Editar bien' : 'Agregar bien'))
 const subtitulo = computed(() =>
@@ -229,6 +274,14 @@ function cerrar() {
 }
 
 function guardar() {
+  if (errorSerie.value !== '' || errorInventario.value !== '') return
+  const valores: Record<string, ValorCaracteristica> = {}
+  for (const def of definiciones.value) {
+    const valor = form.valores[def.id]
+    if (valor !== undefined && valor !== '') valores[def.id] = valor
+  }
+  const hayValores = Object.keys(valores).length > 0
+
   emit('guardar', {
     nombre: form.tipoBien,
     marca: form.marca,
@@ -236,7 +289,10 @@ function guardar() {
     numeroSerie: form.numeroSerie,
     numeroInventario: form.numeroInventario,
     fechaAlta: form.fechaAlta || today(),
-    caracteristicas: form.caracteristicas,
+    caracteristicas: resumirCaracteristicas(definiciones.value, valores, form.observaciones),
+    valores: hayValores ? valores : undefined,
+    observaciones: form.observaciones.trim() || undefined,
+    valorAdquisicion: form.valorAdquisicion === '' ? undefined : Number(form.valorAdquisicion),
     mesesGarantia: form.mesesGarantia || 0,
     estatus: props.bien?.estatus ?? 'Por asignar',
     responsable: props.bien?.responsable,

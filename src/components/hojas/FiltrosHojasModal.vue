@@ -7,7 +7,7 @@
     </template>
 
     <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-3">
-      <!-- Movimiento + Usuario -->
+      <!-- Movimiento + Responsable -->
       <div class="space-y-4">
         <div>
           <label class="mb-1.5 block text-sm font-semibold text-slate-700">Movimiento</label>
@@ -17,9 +17,9 @@
           </BaseSelect>
         </div>
         <div>
-          <label class="mb-1.5 block text-sm font-semibold text-slate-700">Usuario</label>
+          <label class="mb-1.5 block text-sm font-semibold text-slate-700">Responsable</label>
           <BaseSelect v-model="draft.persona">
-            <option value="">Todos los usuarios</option>
+            <option value="">Todos los responsables</option>
             <option v-for="opcion in todas.usuarios" :key="opcion" :value="opcion">{{ opcion }}</option>
           </BaseSelect>
         </div>

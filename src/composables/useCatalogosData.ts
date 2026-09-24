@@ -6,6 +6,7 @@ import {
   UBICACIONES_SEMILLA,
   USUARIOS_SEMILLA,
 } from './catalogosSemilla'
+import { registrarAuditoria } from './useAuditoria'
 import { useBienesData } from './useBienesData'
 import { useMovimientosData } from './useMovimientosData'
 
@@ -41,6 +42,8 @@ export interface ResultadoAccion {
   /** Explica por qué no se pudo, para mostrarlo en un aviso */
   motivo?: string
 }
+
+const ETIQUETA_CATALOGO: Record<Catalogo, string> = { ubicacion: 'Ubicación', direccion: 'Dirección', departamento: 'Departamento', usuario: 'Responsable' }
 
 let contador = 0
 function nuevoId(prefijo: string): string {
@@ -149,6 +152,7 @@ export function useCatalogosData() {
     // TODO: reemplazar por la llamada real, ej. await catalogosApi.crear(catalogo, { nombre })
     const elemento: ElementoCatalogo = { id: nuevoId(catalogo.slice(0, 3)), nombre: nombre.trim(), activo: true }
     listaSimple(catalogo).unshift(elemento)
+    registrarAuditoria('Catálogos', 'Alta', ETIQUETA_CATALOGO[catalogo], elemento.nombre)
     return elemento
   }
 
@@ -160,6 +164,7 @@ export function useCatalogosData() {
     const anterior = elemento.nombre
     elemento.nombre = nombre.trim()
     if (anterior === elemento.nombre) return
+    registrarAuditoria('Catálogos', 'Renombrar', ETIQUETA_CATALOGO[catalogo], `${anterior} → ${elemento.nombre}`)
 
     // Lo vigente (bienes y fichas de usuario) sigue al nombre nuevo; las hojas y movimientos son
     // instantáneas firmadas y conservan el nombre que tenían.
@@ -185,6 +190,7 @@ export function useCatalogosData() {
       activo: true,
     }
     usuarios.unshift(usuario)
+    registrarAuditoria('Catálogos', 'Alta', 'Responsable', usuario.nombre)
     return usuario
   }
 
@@ -198,6 +204,7 @@ export function useCatalogosData() {
     usuario.puesto = datos.puesto.trim()
     usuario.direccion = datos.direccion
     usuario.departamento = datos.departamento
+    registrarAuditoria('Catálogos', 'Edición', 'Responsable',anterior === usuario.nombre ? usuario.nombre : `${anterior} → ${usuario.nombre}`)
 
     // La custodia vigente sigue a la persona; las hojas firmadas conservan el nombre con el que se firmaron.
     if (anterior !== usuario.nombre) {
@@ -223,6 +230,7 @@ export function useCatalogosData() {
     }
 
     elemento.activo = !elemento.activo
+    registrarAuditoria('Catálogos', elemento.activo ? 'Reactivar' : 'Inactivar', ETIQUETA_CATALOGO[catalogo], elemento.nombre)
     return { ok: true }
   }
 
@@ -233,10 +241,11 @@ export function useCatalogosData() {
     if (indice === -1) return { ok: false, motivo: 'No se encontró el elemento.' }
 
     if (referencias(catalogo, lista[indice]!.nombre) > 0) {
-      return { ok: false, motivo: 'Tiene bienes, usuarios o documentos que lo mencionan; inactívalo en su lugar.' }
+      return { ok: false, motivo: 'Tiene bienes, responsables o documentos que lo mencionan; inactívalo en su lugar.' }
     }
 
-    lista.splice(indice, 1)
+    const [eliminado] = lista.splice(indice, 1)
+    registrarAuditoria('Catálogos', 'Eliminar', ETIQUETA_CATALOGO[catalogo], eliminado!.nombre)
     return { ok: true }
   }
 

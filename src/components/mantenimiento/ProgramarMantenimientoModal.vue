@@ -15,9 +15,11 @@
             v-for="opcion in TIPOS"
             :key="opcion"
             type="button"
-            class="rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+            class="rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 disabled:cursor-not-allowed disabled:opacity-50"
             :class="tipo === opcion ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
             :aria-pressed="tipo === opcion"
+            :disabled="bloqueada(opcion)"
+            :title="bloqueada(opcion) ? motivoSinPermiso('dictamen:emitir', rol) : undefined"
             @click="tipo = opcion"
           >
             {{ opcion }}
@@ -202,7 +204,8 @@
             </div>
             <div>
               <label class="mb-1.5 block text-sm font-semibold text-slate-700">Valor de reposición</label>
-              <input v-model.number="valorReposicion" type="number" min="0" step="0.01" placeholder="0.00" :class="INPUT_BLANCO" />
+              <input v-model.number="valorReposicion" type="number" min="0" step="0.01" placeholder="0.00" :class="INPUT_BLANCO" @input="valorSugerido = false" />
+              <p v-if="valorSugerido" class="mt-1 text-xs text-slate-500">Sugerido: valor de adquisición del bien.</p>
             </div>
           </div>
 
@@ -226,6 +229,8 @@
 </template>
 
 <script setup lang="ts">
+import { useAuth } from '@/composables/useAuth'
+import { motivoSinPermiso } from '@/config/permisos'
 import { computed, ref, watch } from 'vue'
 import { useBienesData, type Bien } from '@/composables/useBienesData'
 import {
@@ -326,7 +331,14 @@ function sumarMeses(fechaIso: string, meses: number): string {
   return fecha.toISOString().slice(0, 10)
 }
 
-const tipo = ref<TipoRegistro>(props.tipoInicial)
+// La baja definitiva (dictamen) exige un permiso propio; sin él la opción se ve pero no se puede elegir.
+const { can, rol } = useAuth()
+
+function bloqueada(opcion: TipoRegistro): boolean {
+  return opcion === 'Dictamen' && !can('dictamen:emitir')
+}
+
+const tipo = ref<TipoRegistro>(bloqueada(props.tipoInicial) ? 'Preventivo' : props.tipoInicial)
 const seleccion = ref<Bien[]>([])
 const fecha = ref(hoy())
 const tecnico = ref('')
@@ -340,13 +352,14 @@ const destinoFinal = ref<DestinoFinal | ''>('')
 const conclusionDictamen = ref('')
 const costoReparacion = ref<number | undefined>(undefined)
 const valorReposicion = ref<number | undefined>(undefined)
+const valorSugerido = ref(false)
 const elaboradoPor = ref('')
 const busquedaBien = ref('')
 
 // Cada vez que se abre, arranca desde el tipo/bienes con los que se invocó y un formulario limpio.
 watch(open, (isOpen) => {
   if (!isOpen) return
-  tipo.value = props.tipoInicial
+  tipo.value = bloqueada(props.tipoInicial) ? 'Preventivo' : props.tipoInicial
   seleccion.value = [...props.bienes]
   fecha.value = hoy()
   tecnico.value = ''
@@ -360,8 +373,22 @@ watch(open, (isOpen) => {
   conclusionDictamen.value = ''
   costoReparacion.value = undefined
   valorReposicion.value = undefined
+  valorSugerido.value = false
   elaboradoPor.value = ''
   busquedaBien.value = ''
+})
+
+// Con un solo bien, el valor de reposición se sugiere desde su valor de adquisición (editable);
+// si la selección deja de ser de un bien, se retira la sugerencia que el usuario no tocó.
+watch([tipo, seleccion], () => {
+  const unico = tipo.value === 'Dictamen' && seleccion.value.length === 1 ? seleccion.value[0] : undefined
+  if (unico?.valorAdquisicion !== undefined && valorReposicion.value === undefined) {
+    valorReposicion.value = unico.valorAdquisicion
+    valorSugerido.value = true
+  } else if (!unico && valorSugerido.value) {
+    valorReposicion.value = undefined
+    valorSugerido.value = false
+  }
 })
 
 // La próxima fecha sugerida se recalcula mientras el usuario no la edite después de fijar fecha/periodicidad.

@@ -6,6 +6,8 @@ import {
   UBICACIONES_SEMILLA,
   USUARIOS_SEMILLA,
 } from './catalogosSemilla'
+import { registrarAuditoria } from './useAuditoria'
+import { nombreActual } from './useAuth'
 import { snapshotDe, useBienesData, type Bien, type BienSnapshot } from './useBienesData'
 
 export type TipoMovimiento = 'Asignación' | 'Reasignación' | 'Devolución'
@@ -80,9 +82,6 @@ export function filtrosHojasVacios(): FiltrosHojas {
   return { movimiento: '', persona: '', direccion: '', departamento: '', fechaDesde: '', fechaHasta: '' }
 }
 
-// TODO: reemplazar por el usuario de la sesión cuando exista autenticación real.
-export const ASIGNADO_POR = 'Administrador'
-
 // Instancias compartidas: todas las vistas ven las mismas listas.
 const movimientos = reactive<Movimiento[]>([])
 const hojas = reactive<Hoja[]>([])
@@ -131,7 +130,7 @@ function registrarMovimiento(nuevo: NuevoMovimiento): Hoja[] {
         direccion: ultimoResguardo?.direccion ?? lista[0]?.direccion ?? '—',
         departamento: ultimoResguardo?.departamento ?? lista[0]?.departamento ?? '—',
         fecha: nuevo.fecha,
-        asignadoPor: ASIGNADO_POR,
+        asignadoPor: nombreActual(),
         bienesIds: lista.map((bien) => bien.id),
         bienes: lista.map(snapshotDe),
       })
@@ -164,7 +163,7 @@ function registrarMovimiento(nuevo: NuevoMovimiento): Hoja[] {
       direccion: destino.direccion,
       departamento: destino.departamento,
       fecha: nuevo.fecha,
-      asignadoPor: ASIGNADO_POR,
+      asignadoPor: nombreActual(),
       bienesIds: [...nuevo.bienesIds],
       bienes: seleccion.map(snapshotDe),
     })
@@ -174,13 +173,20 @@ function registrarMovimiento(nuevo: NuevoMovimiento): Hoja[] {
     id: movimientoId,
     tipo: nuevo.tipo,
     fecha: nuevo.fecha,
-    asignadoPor: ASIGNADO_POR,
+    asignadoPor: nombreActual(),
     destino: nuevo.tipo === 'Devolución' ? undefined : nuevo.destino,
     mesaAyuda: nuevo.mesaAyuda,
     notas: nuevo.notas,
     bienesIds: [...nuevo.bienesIds],
   })
   for (const hoja of creadas) hojas.unshift(hoja)
+
+  registrarAuditoria(
+    'Movimientos',
+    nuevo.tipo,
+    `${seleccion.length} ${seleccion.length === 1 ? 'bien' : 'bienes'}`,
+    [nuevo.tipo === 'Devolución' ? '' : `A ${nuevo.destino.persona}`, creadas.map((hoja) => hoja.folio).join(', ')].filter(Boolean).join(' · '),
+  )
 
   return creadas
 }

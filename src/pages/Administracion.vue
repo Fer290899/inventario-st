@@ -1,55 +1,43 @@
 <template>
   <div class="min-w-0 space-y-6">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h2 class="text-2xl font-bold text-slate-800">Administración</h2>
-        <p class="mt-1 text-sm text-slate-500">Catálogos de ubicaciones, direcciones, departamentos, el personal que recibe bienes y los datos de la institución</p>
-      </div>
-
-      <AppButton v-if="tabActivo !== 'institucion'" @click="abrirAlta">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-        {{ textoAgregar }}
-      </AppButton>
+    <div>
+      <h2 class="text-2xl font-bold text-slate-800">Administración</h2>
+      <p class="mt-1 text-sm text-slate-500">Catálogos, configuración y seguridad del sistema</p>
     </div>
 
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <!-- Pestañas -->
-      <div class="overflow-x-auto border-b border-slate-200 px-4 pt-4">
-        <div class="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
-          <button
-            v-for="pestana in PESTANAS"
-            :key="pestana"
-            type="button"
-            class="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 sm:px-4"
-            :class="tabActivo === pestana ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
-            :aria-pressed="tabActivo === pestana"
-            @click="tabActivo = pestana"
-          >
-            {{ ETIQUETAS[pestana].plural }}
-            <span
-              v-if="pestana !== 'institucion'"
-              class="rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
-              :class="tabActivo === pestana ? 'bg-blue-50 text-blue-700' : 'bg-slate-200/70 text-slate-500'"
-            >
-              {{ conteos[pestana] }}
-            </span>
-          </button>
+    <div class="grid grid-cols-1 gap-6 min-[1366px]:grid-cols-[13rem_minmax(0,1fr)] min-[1366px]:items-start">
+      <AdministracionNav :seccion="tabActivo" :conteos="conteos" />
+
+    <div class="min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <!-- Encabezado de la sección -->
+      <div class="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div class="min-w-0">
+          <h3 class="text-lg font-semibold text-slate-800" data-doc="titulo-seccion">{{ SECCIONES[tabActivo].titulo }}</h3>
+          <p class="mt-0.5 text-sm text-slate-500">{{ SECCIONES[tabActivo].descripcion }}</p>
         </div>
-        <div class="h-4"></div>
+
+        <AppButton v-if="SECCIONES_CON_ALTA.includes(tabActivo)" class="shrink-0" data-doc="agregar-elemento" @click="abrirAlta">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          {{ textoAgregar }}
+        </AppButton>
       </div>
 
       <InstitucionForm v-if="tabActivo === 'institucion'" />
+      <AlertasForm v-else-if="tabActivo === 'alertas'" />
+      <CuentasTab v-else-if="tabActivo === 'cuentas'" ref="cuentasTab" />
+      <RolesPermisos v-else-if="tabActivo === 'roles'" />
+      <BitacoraTab v-else-if="tabActivo === 'bitacora'" />
 
       <template v-else>
-      <!-- Controles: tamaño de página + buscador -->
+      <!-- Controles: tamaño de página (solo si hay más de una página) + buscador -->
       <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <PageSizeSelect v-model="pageSize" />
+        <PageSizeSelect v-if="hayVariasPaginas" v-model="pageSize" />
         <SearchInput
           v-model="busqueda"
           :placeholder="catalogo === 'usuario' ? 'Buscar por nombre, puesto, dirección...' : 'Buscar por nombre...'"
-          class="w-full sm:w-72"
+          class="w-full sm:ml-auto sm:w-72"
         />
       </div>
 
@@ -110,6 +98,7 @@
         </div>
 
         <TablePagination
+          v-if="hayVariasPaginas"
           v-model:pagina-actual="paginaActualElementos"
           :total-paginas="totalPaginasElementos"
           :rango-inicio="rangoInicioElementos"
@@ -118,34 +107,34 @@
         />
       </template>
 
-      <!-- Tabla: Usuarios -->
+      <!-- Tabla: Responsables -->
       <template v-else>
         <div class="max-h-[600px] overflow-auto">
           <table class="w-full text-left text-sm">
             <thead class="sticky top-0 z-10 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 shadow-[0_1px_0_0] shadow-slate-200">
               <tr>
-                <th class="whitespace-nowrap px-4 py-3">Nombre</th>
-                <th class="whitespace-nowrap px-4 py-3">Puesto</th>
-                <th class="whitespace-nowrap px-4 py-3">Dirección</th>
-                <th class="whitespace-nowrap px-4 py-3">Departamento</th>
-                <th class="whitespace-nowrap px-4 py-3">Bienes a su resguardo</th>
-                <th class="whitespace-nowrap px-4 py-3">Estatus</th>
-                <th class="whitespace-nowrap px-4 py-3">Acciones</th>
+                <th class="whitespace-nowrap px-3 py-3">Nombre</th>
+                <th class="whitespace-nowrap px-3 py-3">Puesto</th>
+                <th class="whitespace-nowrap px-3 py-3">Dirección</th>
+                <th class="whitespace-nowrap px-3 py-3">Departamento</th>
+                <th class="min-w-[5.5rem] px-3 py-3">Bienes a su resguardo</th>
+                <th class="whitespace-nowrap px-3 py-3">Estatus</th>
+                <th class="whitespace-nowrap px-3 py-3">Acciones</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
               <tr v-for="usuario in usuariosPagina" :key="usuario.id" class="transition hover:bg-slate-50">
-                <td class="whitespace-nowrap px-4 py-2.5 font-medium" :class="usuario.activo ? 'text-slate-800' : 'text-slate-400'">{{ usuario.nombre }}</td>
-                <td class="whitespace-nowrap px-4 py-2.5 text-slate-600">{{ usuario.puesto }}</td>
-                <td class="whitespace-nowrap px-4 py-2.5 text-slate-600">{{ usuario.direccion }}</td>
-                <td class="whitespace-nowrap px-4 py-2.5 text-slate-600">{{ usuario.departamento }}</td>
-                <td class="whitespace-nowrap px-4 py-2.5 tabular-nums text-slate-600">{{ bienesEn('usuario', usuario.nombre) }}</td>
-                <td class="whitespace-nowrap px-4 py-2.5">
+                <td class="min-w-[8.5rem] px-3 py-2.5 font-medium" :class="usuario.activo ? 'text-slate-800' : 'text-slate-400'">{{ usuario.nombre }}</td>
+                <td class="px-3 py-2.5 text-slate-600">{{ usuario.puesto }}</td>
+                <td class="px-3 py-2.5 text-slate-600">{{ usuario.direccion }}</td>
+                <td class="px-3 py-2.5 text-slate-600">{{ usuario.departamento }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5 tabular-nums text-slate-600">{{ bienesEn('usuario', usuario.nombre) }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5">
                   <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="usuario.activo ? ESTATUS_ACTIVO : ESTATUS_INACTIVO">
                     {{ usuario.activo ? 'Activo' : 'Inactivo' }}
                   </span>
                 </td>
-                <td class="whitespace-nowrap px-4 py-2.5">
+                <td class="whitespace-nowrap px-3 py-2.5">
                   <div class="flex items-center gap-1">
                     <IconButton label="Editar" tone="blue" @click="abrirEdicionUsuario(usuario)">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -178,7 +167,7 @@
 
               <tr v-if="usuariosPagina.length === 0">
                 <td colspan="7">
-                  <EmptyState mensaje="No se encontraron usuarios que coincidan con la búsqueda." />
+                  <EmptyState mensaje="No se encontraron responsables que coincidan con la búsqueda." />
                 </td>
               </tr>
             </tbody>
@@ -186,6 +175,7 @@
         </div>
 
         <TablePagination
+          v-if="hayVariasPaginas"
           v-model:pagina-actual="paginaActualUsuarios"
           :total-paginas="totalPaginasUsuarios"
           :rango-inicio="rangoInicioUsuarios"
@@ -194,6 +184,7 @@
         />
       </template>
       </template>
+    </div>
     </div>
 
     <CatalogoModal v-if="catalogo !== 'usuario'" v-model:open="mostrarModalCatalogo" :catalogo="catalogo" :elemento="elementoEditando" @guardar="onGuardarElemento" />
@@ -210,6 +201,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   useCatalogosData,
   type Catalogo,
@@ -218,11 +210,19 @@ import {
   type ElementoCatalogo,
   type Usuario,
 } from '@/composables/useCatalogosData'
+import { useCuentasData } from '@/composables/useCuentasData'
 import { usePaginacion } from '@/composables/usePaginacion'
 import { useToast } from '@/composables/useToast'
 import CatalogoModal from '@/components/administracion/CatalogoModal.vue'
+import AdministracionNav from '@/components/administracion/AdministracionNav.vue'
+import AlertasForm from '@/components/administracion/AlertasForm.vue'
+import BitacoraTab from '@/components/administracion/BitacoraTab.vue'
+import CuentasTab from '@/components/administracion/CuentasTab.vue'
 import InstitucionForm from '@/components/administracion/InstitucionForm.vue'
+import RolesPermisos from '@/components/administracion/RolesPermisos.vue'
 import UsuarioModal from '@/components/administracion/UsuarioModal.vue'
+import { ICONO_EDITAR, ICONO_ELIMINAR, ICONO_INACTIVAR, ICONO_REACTIVAR } from '@/components/administracion/iconos'
+import { SECCIONES, SECCIONES_CON_ALTA, esCatalogo, seccionDesdeConsulta, type Seccion } from '@/components/administracion/secciones'
 import AppButton from '@/components/ui/AppButton.vue'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
@@ -246,43 +246,36 @@ const {
   referencias,
 } = useCatalogosData()
 const toast = useToast()
+const { cuentas } = useCuentasData()
 
-type Pestana = Catalogo | 'institucion'
-
-const PESTANAS: Pestana[] = ['ubicacion', 'direccion', 'departamento', 'usuario', 'institucion']
-
-const ETIQUETAS: Record<Pestana, { plural: string; singular: string; femenino: boolean }> = {
-  ubicacion: { plural: 'Ubicaciones', singular: 'Ubicación', femenino: true },
-  direccion: { plural: 'Direcciones', singular: 'Dirección', femenino: true },
-  departamento: { plural: 'Departamentos', singular: 'Departamento', femenino: false },
-  usuario: { plural: 'Usuarios', singular: 'Usuario', femenino: false },
-  institucion: { plural: 'Institución', singular: 'Institución', femenino: true },
-}
 
 const ESTATUS_ACTIVO = 'bg-emerald-50 text-emerald-700'
 const ESTATUS_INACTIVO = 'bg-slate-100 text-slate-500'
 
-const ICONO_EDITAR =
-  'M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10'
-const ICONO_INACTIVAR = 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636'
-const ICONO_REACTIVAR = 'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-const ICONO_ELIMINAR =
-  'M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0'
+const route = useRoute()
 
-const tabActivo = ref<Pestana>('ubicacion')
-// Pestaña de catálogo vigente; en "Institución" (que no es un catálogo) no se usa.
-const catalogo = computed<Catalogo>(() => (tabActivo.value === 'institucion' ? 'ubicacion' : tabActivo.value))
+// La sección activa vive en la URL (?seccion=…): se puede enlazar y sobrevive a recargar.
+const tabActivo = computed<Seccion>(() => seccionDesdeConsulta(route.query.seccion))
+// Catálogo vigente; en las secciones que no son un catálogo no se usa.
+const catalogo = computed<Catalogo>(() => (esCatalogo(tabActivo.value) ? tabActivo.value : 'ubicacion'))
 const busqueda = ref('')
 const pageSize = ref(10)
 
-const conteos = computed<Record<Catalogo, number>>(() => ({
+const conteos = computed<Partial<Record<Seccion, number>>>(() => ({
   ubicacion: ubicaciones.length,
   direccion: direcciones.length,
   departamento: departamentos.length,
   usuario: usuarios.length,
+  cuentas: cuentas.value.length,
 }))
 
-const textoAgregar = computed(() => `Agregar ${ETIQUETAS[catalogo.value].singular.toLowerCase()}`)
+const textoAgregar = computed(() => `Agregar ${SECCIONES[tabActivo.value].singular.toLowerCase()}`)
+
+const cuentasTab = ref<InstanceType<typeof CuentasTab> | null>(null)
+
+// El tamaño de página mínimo es 10: con menos elementos en total no hay nada que paginar.
+const TAMANO_PAGINA_MINIMO = 10
+const hayVariasPaginas = computed(() => (conteos.value[catalogo.value] ?? 0) > TAMANO_PAGINA_MINIMO)
 
 function normalizar(texto: string): string {
   return texto
@@ -332,7 +325,7 @@ watch([tabActivo, busqueda], () => {
 })
 
 function accion(catalogo: Catalogo, femeninoMasculino: [string, string]): string {
-  const { singular, femenino } = ETIQUETAS[catalogo]
+  const { singular, femenino } = SECCIONES[catalogo]
   return `${singular} ${femenino ? femeninoMasculino[0] : femeninoMasculino[1]}`
 }
 
@@ -343,6 +336,10 @@ const mostrarModalUsuario = ref(false)
 const usuarioEditando = ref<Usuario | null>(null)
 
 function abrirAlta() {
+  if (tabActivo.value === 'cuentas') {
+    cuentasTab.value?.abrirAlta()
+    return
+  }
   if (catalogo.value === 'usuario') {
     usuarioEditando.value = null
     mostrarModalUsuario.value = true
@@ -378,13 +375,13 @@ function onGuardarElemento(nombre: string) {
 function onGuardarUsuario(datos: DatosUsuario) {
   if (usuarioEditando.value) {
     actualizarUsuario(usuarioEditando.value.id, datos)
-    toast.success(`Usuario actualizado: ${datos.nombre}`)
+    toast.success(`Responsable actualizado: ${datos.nombre}`)
     return
   }
 
   agregarUsuario(datos)
   irAlInicioUsuarios()
-  toast.success(`Usuario agregado: ${datos.nombre}`)
+  toast.success(`Responsable agregado: ${datos.nombre}`)
 }
 
 // --- Inactivar / reactivar ---
@@ -412,7 +409,7 @@ function etiquetaInactivarUsuario(usuario: Usuario): string {
 
 // --- Eliminar ---
 function etiquetaEliminar(catalogo: Catalogo, nombre: string): string {
-  return referencias(catalogo, nombre) > 0 ? 'Eliminar (tiene bienes, usuarios o documentos que lo mencionan; inactívalo en su lugar)' : 'Eliminar'
+  return referencias(catalogo, nombre) > 0 ? 'Eliminar (tiene bienes, responsables o documentos que lo mencionan; inactívalo en su lugar)' : 'Eliminar'
 }
 
 const mostrarConfirmacion = ref(false)

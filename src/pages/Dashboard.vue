@@ -6,17 +6,25 @@
     </div>
 
     <!-- KPIs -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       <StatCard
         v-for="kpi in statCards"
         :key="kpi.id"
+        :data-kpi="kpi.id"
         :label="kpi.label"
         :value="kpi.value"
         :hint="kpi.hint"
         :icon="kpi.icon"
         :accent="kpi.accent"
+        :critico="kpi.critico"
+        :to="kpi.to"
+        :interactiva="!kpi.to"
+        @click="!kpi.to && irAlPanel()"
       />
     </div>
+
+    <!-- Alertas -->
+    <PanelAlertas />
 
     <!-- Últimos mantenimientos realizados -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -24,15 +32,15 @@
         title="Último preventivo realizado"
         :icon="ICONO_RELOJ"
         accent="amber"
-        :fecha="ultimoPreventivo.fecha"
-        :tecnico="ultimoPreventivo.tecnico"
+        :fecha="ultimoPreventivo?.fecha ?? null"
+        :tecnico="ultimoPreventivo?.tecnico ?? null"
       />
       <LastMaintenanceCard
         title="Último correctivo realizado"
         :icon="ICONO_LLAVE"
         accent="rose"
-        :fecha="ultimoCorrectivo.fecha"
-        :tecnico="ultimoCorrectivo.tecnico"
+        :fecha="ultimoCorrectivo?.fecha ?? null"
+        :tecnico="ultimoCorrectivo?.tecnico ?? null"
       />
     </div>
 
@@ -75,6 +83,7 @@ import StatCard from '@/components/dashboard/StatCard.vue'
 import ChartCard from '@/components/dashboard/ChartCard.vue'
 import DaysRangeSelect from '@/components/dashboard/DaysRangeSelect.vue'
 import LastMaintenanceCard from '@/components/dashboard/LastMaintenanceCard.vue'
+import PanelAlertas from '@/components/dashboard/PanelAlertas.vue'
 import { buildDailyAreaChartOptions, buildDailySeries } from '@/components/dashboard/chartOptions'
 import { useDashboardData, type DashboardKpi } from '@/composables/useDashboardData'
 
@@ -104,18 +113,31 @@ const KPI_PRESENTATION: Record<DashboardKpi['id'], { icon: string; accent: StatA
     accent: 'neutral',
     icon: 'M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z',
   },
-  preventivosEnCurso: {
+  preventivosPendientes: {
     accent: 'amber',
     icon: ICONO_RELOJ,
   },
-  correctivosEnCurso: {
+  correctivosAbiertos: {
     accent: 'rose',
     icon: ICONO_LLAVE,
   },
+  bienesBaja: {
+    accent: 'neutral',
+    icon: 'M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0',
+  },
+  alertasActivas: {
+    accent: 'rose',
+    icon: 'M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0',
+  },
+}
+
+// El scroll vive en <main>, no en la ventana: se lleva el panel a la vista directamente.
+function irAlPanel() {
+  document.getElementById('panel-alertas')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 const statCards = computed(() =>
-  kpis.map((kpi) => ({
+  kpis.value.map((kpi) => ({
     ...kpi,
     ...KPI_PRESENTATION[kpi.id],
   })),
@@ -141,7 +163,7 @@ const preventivoOptions = computed(() =>
   ),
 )
 const preventivoSeries = computed(() =>
-  buildDailySeries(mantenimientosPreventivosPorDia.slice(-preventivoDias.value), 'Preventivos'),
+  buildDailySeries(mantenimientosPreventivosPorDia.value.slice(-preventivoDias.value), 'Preventivos'),
 )
 
 const correctivoOptions = computed(() =>
@@ -152,7 +174,7 @@ const correctivoOptions = computed(() =>
 )
 const correctivoSeries = computed(() =>
   buildDailySeries(
-    mantenimientosCorrectivosConcluidosPorDia.slice(-correctivoDias.value),
+    mantenimientosCorrectivosConcluidosPorDia.value.slice(-correctivoDias.value),
     'Correctivos concluidos',
   ),
 )

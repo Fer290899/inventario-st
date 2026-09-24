@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import EmptyLayout from '@/layout/EmptyLayout.vue'
 import MainLayout from '@/layout/MainLayout.vue'
+import { motivoSinPermiso, type Permiso } from '@/config/permisos'
+import { useAuth } from '@/composables/useAuth'
+import { useToast } from '@/composables/useToast'
 
 
 const router = createRouter({
@@ -23,6 +26,7 @@ const router = createRouter({
       path: '/dashboard',
       component: MainLayout,
       redirect: '/dashboard/home',
+      meta: { requiereSesion: true },
       children: [
         {
           path: 'home',
@@ -42,7 +46,14 @@ const router = createRouter({
         {
           path: 'bienes/tipos-bien',
           name: 'TiposBien',
-          component: () => import('../pages/AgregarTipoBien.vue')
+          component: () => import('../pages/AgregarTipoBien.vue'),
+          meta: { permiso: 'tipos:gestionar' satisfies Permiso }
+        },
+        {
+          path: 'bienes/:id',
+          name: 'DetalleBien',
+          component: () => import('../pages/DetalleBien.vue'),
+          meta: { title: 'Detalle del bien' }
         },
         {
           path: 'mantenimiento',
@@ -52,11 +63,36 @@ const router = createRouter({
         {
           path: 'administracion',
           name: 'Administracion',
-          component: () => import('../pages/Administracion.vue')
+          component: () => import('../pages/Administracion.vue'),
+          meta: { permiso: 'admin:gestionar' satisfies Permiso }
         }
       ]
     }
   ],
+})
+
+// La autorización real vivirá en el servidor; este guard solo ordena la experiencia de uso.
+router.beforeEach((to) => {
+  const { estaAutenticado, can, rol, refrescarSesion } = useAuth()
+
+  if (!refrescarSesion()) {
+    useToast().error('Tu cuenta ya no tiene acceso al sistema.')
+    return { name: 'Login' }
+  }
+
+  if (to.matched.some((registro) => registro.meta.requiereSesion) && !estaAutenticado.value) {
+    return { name: 'Login', query: { redirect: to.fullPath } }
+  }
+
+  if (to.name === 'Login' && estaAutenticado.value) {
+    return { path: '/dashboard/home' }
+  }
+
+  const permiso = to.matched.map((registro) => registro.meta.permiso as Permiso | undefined).find(Boolean)
+  if (permiso && !can(permiso)) {
+    useToast().error(motivoSinPermiso(permiso, rol.value))
+    return { path: '/dashboard/home' }
+  }
 })
 
 export default router

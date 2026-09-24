@@ -1,7 +1,5 @@
 <template>
   <form class="max-w-2xl space-y-4 p-6" @submit.prevent="guardar">
-    <p class="text-sm text-slate-500">Estos datos aparecen en el encabezado de las hojas de resguardo, las fichas de bien y los dictámenes que se imprimen.</p>
-
     <div>
       <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="institucion-nombre">
         Nombre de la institución <span class="text-rose-500">*</span>

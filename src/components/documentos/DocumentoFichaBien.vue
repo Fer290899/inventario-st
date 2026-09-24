@@ -14,8 +14,7 @@
 
     <section class="text-sm">
       <h2 class="mb-2 border-b border-slate-300 pb-1 text-xs font-bold uppercase tracking-wide text-slate-500">Historial</h2>
-      <p v-if="historial.length === 0" class="text-xs text-slate-500">Sin movimientos ni mantenimientos registrados.</p>
-      <table v-else class="w-full border-collapse text-left text-xs">
+      <table class="w-full border-collapse text-left text-xs">
         <thead>
           <tr class="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wide">
             <th class="w-24 py-1.5 pr-2">Fecha</th>
@@ -26,8 +25,11 @@
         <tbody>
           <tr v-for="evento in historial" :key="evento.clave" data-doc="fila-historial" class="break-inside-avoid border-b border-slate-200">
             <td class="py-1.5 pr-2 tabular-nums">{{ formatFecha(evento.fecha) }}</td>
-            <td class="py-1.5 pr-2 font-medium">{{ evento.evento }}</td>
-            <td class="py-1.5">{{ evento.detalle }}</td>
+            <td class="py-1.5 pr-2 font-medium">{{ evento.titulo }}</td>
+            <td class="py-1.5">
+              {{ evento.detalle }}
+              <span v-for="cambio in evento.cambios ?? []" :key="cambio.campo" class="block text-slate-600">{{ cambio.campo }}: {{ cambio.antes }} → {{ cambio.despues }}</span>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -38,17 +40,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Bien } from '@/composables/useBienesData'
-import { useMantenimientosData } from '@/composables/useMantenimientosData'
+import { useHistorialBien } from '@/composables/useHistorialBien'
 import { useMovimientosData } from '@/composables/useMovimientosData'
-import { formatFecha, sumarMesesIso } from '@/utils/formato'
+import { formatFecha, formatMoneda, sumarMesesIso } from '@/utils/formato'
 import DocumentoEncabezado from './DocumentoEncabezado.vue'
 
 const props = defineProps<{
   bien: Bien
 }>()
 
-const { movimientos, hojas } = useMovimientosData()
-const { mantenimientos, dictamenes } = useMantenimientosData()
+const { hojas } = useMovimientosData()
+const { historialDe } = useHistorialBien()
 
 const hoy = new Date().toISOString().slice(0, 10)
 
@@ -86,6 +88,7 @@ const secciones = computed(() => {
         { etiqueta: 'Origen', valor: bien.origen ?? vacio },
         { etiqueta: 'No. de factura', valor: bien.numeroFactura ?? vacio },
         { etiqueta: 'Fecha de factura', valor: bien.fechaFactura ? formatFecha(bien.fechaFactura) : vacio },
+        { etiqueta: 'Valor de adquisición', valor: bien.valorAdquisicion !== undefined ? formatMoneda(bien.valorAdquisicion, { centavos: true }) : vacio },
       ],
     },
     {
@@ -102,42 +105,5 @@ const secciones = computed(() => {
   ]
 })
 
-interface EventoHistorial {
-  clave: string
-  fecha: string
-  evento: string
-  detalle: string
-}
-
-const historial = computed<EventoHistorial[]>(() => {
-  const id = props.bien.id
-  const eventos: EventoHistorial[] = []
-
-  for (const mov of movimientos) {
-    if (!mov.bienesIds.includes(id)) continue
-    eventos.push({
-      clave: mov.id,
-      fecha: mov.fecha,
-      evento: mov.tipo,
-      detalle: mov.destino ? `A ${mov.destino.persona} · ${mov.destino.direccion}` : 'Devuelto al almacén',
-    })
-  }
-
-  for (const mant of mantenimientos) {
-    if (mant.bienId !== id) continue
-    eventos.push({
-      clave: mant.id,
-      fecha: mant.fecha,
-      evento: `Mantenimiento ${mant.tipo.toLowerCase()}`,
-      detalle: `${mant.folio} · ${mant.estatus}${mant.resultado ? ` · ${mant.resultado}` : ''}`,
-    })
-  }
-
-  for (const dict of dictamenes) {
-    if (dict.bienId !== id) continue
-    eventos.push({ clave: dict.id, fecha: dict.fecha, evento: 'Dictamen de baja', detalle: `${dict.folio} · ${dict.causa}` })
-  }
-
-  return eventos.sort((a, b) => b.fecha.localeCompare(a.fecha))
-})
+const historial = computed(() => historialDe(props.bien))
 </script>

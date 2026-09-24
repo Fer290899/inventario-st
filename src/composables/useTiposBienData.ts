@@ -1,4 +1,6 @@
 import { computed, reactive } from 'vue'
+import { resumirCaracteristicas } from '@/utils/caracteristicas'
+import { registrarAuditoria } from './useAuditoria'
 import { useBienesData } from './useBienesData'
 
 export type CategoriaTipoBien =
@@ -232,6 +234,7 @@ export function useTiposBienData() {
     // TODO: reemplazar por la llamada real, ej. await tiposBienApi.crearTipo(datos)
     const tipo: TipoBien = { id: nuevoId('tipo'), descripcion: datos.descripcion.trim(), categoria: datos.categoria, caracteristicas: [] }
     tipos.unshift(tipo)
+    registrarAuditoria('Tipos de bien', 'Alta', tipo.descripcion, tipo.categoria)
     return tipo
   }
 
@@ -243,6 +246,7 @@ export function useTiposBienData() {
     const anterior = tipo.descripcion
     tipo.descripcion = datos.descripcion.trim()
     tipo.categoria = datos.categoria
+    registrarAuditoria('Tipos de bien', 'Edición', tipo.descripcion, anterior === tipo.descripcion ? tipo.categoria : `${anterior} → ${tipo.descripcion}`)
 
     // El bien guarda el tipo por su descripción: al renombrar, sus bienes lo siguen.
     if (anterior !== tipo.descripcion) {
@@ -255,7 +259,16 @@ export function useTiposBienData() {
   function guardarCaracteristicas(id: string, caracteristicas: CaracteristicaDef[]) {
     // TODO: reemplazar por la llamada real, ej. await tiposBienApi.guardarCaracteristicas(id, caracteristicas)
     const tipo = tipos.find((candidato) => candidato.id === id)
-    if (tipo) tipo.caracteristicas = caracteristicas
+    if (!tipo) return
+    tipo.caracteristicas = caracteristicas
+    registrarAuditoria('Tipos de bien', 'Características', tipo.descripcion, `${caracteristicas.length} ${caracteristicas.length === 1 ? 'característica' : 'características'}`)
+
+    // El texto derivado de cada bien con valores estructurados sigue a las definiciones (nombre, unidad...).
+    for (const bien of bienes) {
+      if (bien.nombre === tipo.descripcion && bien.valores) {
+        bien.caracteristicas = resumirCaracteristicas(caracteristicas, bien.valores, bien.observaciones)
+      }
+    }
   }
 
   return { tipos, nombresTipos, bienesPorTipo, existeDescripcion, agregarTipo, actualizarTipo, guardarCaracteristicas }

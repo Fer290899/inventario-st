@@ -1,4 +1,5 @@
 import { reactive } from 'vue'
+import { registrarAuditoria } from './useAuditoria'
 
 export interface Institucion {
   nombre: string
@@ -20,6 +21,7 @@ export function useInstitucionData() {
   // ej. await configuracionApi.actualizarInstitucion(datos)
   function actualizarInstitucion(datos: Institucion) {
     Object.assign(institucion, datos)
+    registrarAuditoria('Configuración', 'Institución', datos.nombre, 'Datos de encabezado de los documentos')
   }
 
   return { institucion, actualizarInstitucion }

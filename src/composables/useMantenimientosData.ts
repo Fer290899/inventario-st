@@ -1,4 +1,7 @@
 import { reactive } from 'vue'
+import { hoyIso, sumarDiasIso, sumarMesesIso } from '@/utils/formato'
+import { registrarAuditoria } from './useAuditoria'
+import { nombreActual } from './useAuth'
 import { snapshotDe, useBienesData, type Bien, type BienSnapshot, type EstatusBien } from './useBienesData'
 
 export type TipoMantenimiento = 'Preventivo' | 'Correctivo'
@@ -74,9 +77,6 @@ export function filtrosMantenimientoVacios(): FiltrosMantenimiento {
   return { tipo: '', estatus: '', tecnico: '', prioridad: '', fechaDesde: '', fechaHasta: '' }
 }
 
-// TODO: reemplazar por el usuario de la sesión cuando exista autenticación real.
-export const REGISTRADO_POR = 'Administrador'
-
 export const TECNICOS_OPCIONES = [
   'Soporte Técnico Interno',
   'ServiTec Refacciones S.A.',
@@ -86,7 +86,6 @@ export const TECNICOS_OPCIONES = [
   'Mantenimiento Industrial Cruz',
 ]
 
-const PRIORIDADES: Prioridad[] = ['Baja', 'Media', 'Alta', 'Urgente']
 const PERIODICIDADES: Periodicidad[] = ['Mensual', 'Trimestral', 'Semestral', 'Anual']
 const PERIODOS_MESES: Record<Periodicidad, number> = { Mensual: 1, Trimestral: 3, Semestral: 6, Anual: 12 }
 export const CAUSAS_BAJA: CausaBaja[] = [
@@ -157,23 +156,6 @@ function pad(value: number, length: number): string {
   return String(value).padStart(length, '0')
 }
 
-function randomFrom<T>(items: T[]): T {
-  return items[Math.floor(Math.random() * items.length)]!
-}
-
-function randomFecha(): string {
-  const year = 2023 + Math.floor(Math.random() * 3)
-  const month = 1 + Math.floor(Math.random() * 12)
-  const day = 1 + Math.floor(Math.random() * 28)
-  return `${year}-${pad(month, 2)}-${pad(day, 2)}`
-}
-
-function sumarMeses(fechaIso: string, meses: number): string {
-  const fecha = new Date(`${fechaIso}T00:00:00`)
-  fecha.setMonth(fecha.getMonth() + meses)
-  return fecha.toISOString().slice(0, 10)
-}
-
 // Instancias compartidas: todas las vistas ven las mismas listas.
 const mantenimientos = reactive<Mantenimiento[]>([])
 const dictamenes = reactive<Dictamen[]>([])
@@ -190,6 +172,11 @@ function siguienteFolio(tipo: TipoMantenimiento): string {
 function instantaneaBien(bien: Bien | undefined, bienId: string): BienSnapshot {
   if (bien) return snapshotDe(bien)
   return { id: bienId, nombre: '—', marca: '—', modelo: '—', numeroSerie: '—', numeroInventario: '—', caracteristicas: '' }
+}
+
+let auditoriaSilenciada = false
+function auditar(accion: string, entidad: string, detalle: string) {
+  if (!auditoriaSilenciada) registrarAuditoria('Mantenimiento', accion, entidad, detalle)
 }
 
 function siguienteFolioDictamen(): string {
@@ -220,7 +207,7 @@ function iniciarMantenimiento(nuevo: NuevoMantenimiento): Mantenimiento[] {
       tecnico: nuevo.tecnico,
       descripcion: nuevo.descripcion,
       estatus: 'Programado',
-      registradoPor: REGISTRADO_POR,
+      registradoPor: nombreActual(),
     }
 
     if (nuevo.tipo === 'Correctivo') {
@@ -232,13 +219,14 @@ function iniciarMantenimiento(nuevo: NuevoMantenimiento): Mantenimiento[] {
       }
     } else {
       mantenimiento.periodicidad = nuevo.periodicidad
-      if (nuevo.periodicidad) mantenimiento.proximaFecha = sumarMeses(nuevo.fecha, PERIODOS_MESES[nuevo.periodicidad])
+      if (nuevo.periodicidad) mantenimiento.proximaFecha = sumarMesesIso(nuevo.fecha, PERIODOS_MESES[nuevo.periodicidad])
     }
 
     return mantenimiento
   })
 
   for (const mantenimiento of creados) mantenimientos.unshift(mantenimiento)
+  auditar('Programar', `${creados.length} ${creados.length === 1 ? 'bien' : 'bienes'}`, `${nuevo.tipo} · ${creados.map((item) => item.folio).join(', ')}`)
   return creados
 }
 
@@ -257,7 +245,10 @@ function concluirMantenimiento(id: string, datos: DatosConclusion): Dictamen | n
   mantenimiento.costo = datos.costo
   mantenimiento.notasConclusion = datos.notasConclusion
 
-  if (mantenimiento.tipo !== 'Correctivo') return null
+  if (mantenimiento.tipo !== 'Correctivo') {
+    auditar('Concluir', mantenimiento.folio, 'Preventivo')
+    return null
+  }
 
   mantenimiento.resultado = datos.resultado
   const { bienes } = useBienesData()
@@ -265,6 +256,7 @@ function concluirMantenimiento(id: string, datos: DatosConclusion): Dictamen | n
 
   if (datos.resultado === 'Reparado') {
     if (bien) bien.estatus = mantenimiento.estatusPrevioBien ?? 'Por asignar'
+    auditar('Concluir', mantenimiento.folio, 'Correctivo · Reparado')
     return null
   }
 
@@ -283,9 +275,10 @@ function concluirMantenimiento(id: string, datos: DatosConclusion): Dictamen | n
       costoReparacion: datos.costoReparacion,
       valorReposicion: datos.valorReposicion,
       destinoFinal: datos.destinoFinal ?? 'Resguardo para baja',
-      elaboradoPor: datos.elaboradoPor ?? REGISTRADO_POR,
+      elaboradoPor: datos.elaboradoPor ?? nombreActual(),
     }
     dictamenes.unshift(dictamen)
+    auditar('Dictamen de baja', mantenimiento.folio, `${dictamen.folio} · ${dictamen.causa} · ${dictamen.destinoFinal}`)
     return dictamen
   }
 
@@ -297,6 +290,16 @@ function concluirMantenimiento(id: string, datos: DatosConclusion): Dictamen | n
  * internamente crea el correctivo ya concluido como "No reparable" y su dictamen, para no duplicar esa lógica.
  */
 function generarDictamenDirecto(nuevo: NuevoDictamenDirecto): Dictamen[] {
+  // Se compone de "programar" + "concluir": se silencian sus registros y se deja uno solo.
+  auditoriaSilenciada = true
+  try {
+    return generarDictamenesSinAuditoria(nuevo)
+  } finally {
+    auditoriaSilenciada = false
+  }
+}
+
+function generarDictamenesSinAuditoria(nuevo: NuevoDictamenDirecto): Dictamen[] {
   const creados = iniciarMantenimiento({
     tipo: 'Correctivo',
     bienesIds: nuevo.bienesIds,
@@ -321,14 +324,28 @@ function generarDictamenDirecto(nuevo: NuevoDictamenDirecto): Dictamen[] {
     })
     if (dictamen) dictamenesGenerados.push(dictamen)
   }
+  registrarAuditoria(
+    'Mantenimiento',
+    'Dictamen de baja',
+    `${dictamenesGenerados.length} ${dictamenesGenerados.length === 1 ? 'bien' : 'bienes'}`,
+    `${dictamenesGenerados.map((item) => item.folio).join(', ')} · ${nuevo.causa}`,
+  )
   return dictamenesGenerados
 }
 
-// Semilla: coherente con los bienes que useBienesData ya generó (algunos "En reparación"/"Baja" de fábrica).
+// Semilla determinista y relativa a hoy: siempre hay mantenimientos recientes, atrasados y por vencer,
+// así el dashboard y las alertas muestran casos de cada tipo sin depender de la fecha en que se abra.
+const ANTIGUEDAD_CORRECTIVOS_ABIERTOS = [3, 9, 15, 22, 28, 34, 41, 48, 56, 64, 72, 80, 90, 6, 12, 19]
+const PRIORIDADES_SEMILLA: Prioridad[] = ['Media', 'Baja', 'Alta', 'Urgente']
+
 function sembrarDatos() {
   const { bienes } = useBienesData()
+  const hoy = hoyIso()
+  const enDias = (dias: number) => sumarDiasIso(hoy, dias)
+  const tecnico = (indice: number) => TECNICOS_OPCIONES[indice % TECNICOS_OPCIONES.length]!
 
-  // Bienes que el mock ya marca "En reparación": se les asocia el correctivo que los dejó así.
+  // Bienes que el mock ya marca "En reparación": se les asocia el correctivo que los dejó así,
+  // con antigüedades escalonadas (algunos recientes, otros atorados hace meses).
   bienes
     .filter((bien) => bien.estatus === 'En reparación')
     .forEach((bien, indice) => {
@@ -338,14 +355,14 @@ function sembrarDatos() {
         folio: siguienteFolio('Correctivo'),
         tipo: 'Correctivo',
         bienId: bien.id,
-        fecha: randomFecha(),
-        tecnico: randomFrom(TECNICOS_OPCIONES),
+        fecha: enDias(-ANTIGUEDAD_CORRECTIVOS_ABIERTOS[indice % ANTIGUEDAD_CORRECTIVOS_ABIERTOS.length]!),
+        tecnico: tecnico(indice),
         descripcion: 'Revisión por falla reportada por el usuario',
-        prioridad: randomFrom(PRIORIDADES),
-        fallaReportada: randomFrom(FALLAS_EJEMPLO),
+        prioridad: PRIORIDADES_SEMILLA[indice % PRIORIDADES_SEMILLA.length],
+        fallaReportada: FALLAS_EJEMPLO[indice % FALLAS_EJEMPLO.length],
         estatus: indice % 2 === 0 ? 'En curso' : 'Programado',
         estatusPrevioBien: bien.responsable ? 'Asignado' : 'Por asignar',
-        registradoPor: REGISTRADO_POR,
+        registradoPor: nombreActual(),
       })
     })
 
@@ -353,25 +370,25 @@ function sembrarDatos() {
   bienes
     .filter((bien) => bien.estatus === 'Baja')
     .slice(0, 2)
-    .forEach((bien) => {
+    .forEach((bien, indice) => {
       contadorMantenimiento += 1
       const mantenimientoId = `mant-${contadorMantenimiento}`
-      const fecha = randomFecha()
+      const fecha = enDias(-(25 + indice * 20))
       mantenimientos.unshift({
         id: mantenimientoId,
         folio: siguienteFolio('Correctivo'),
         tipo: 'Correctivo',
         bienId: bien.id,
         fecha,
-        tecnico: randomFrom(TECNICOS_OPCIONES),
+        tecnico: tecnico(indice),
         descripcion: 'Diagnóstico de falla',
         prioridad: 'Alta',
-        fallaReportada: randomFrom(FALLAS_EJEMPLO),
+        fallaReportada: FALLAS_EJEMPLO[indice % FALLAS_EJEMPLO.length],
         estatus: 'Concluido',
-        fechaConclusion: sumarMeses(fecha, 0),
+        fechaConclusion: fecha,
         resultado: 'No reparable',
         estatusPrevioBien: 'Asignado',
-        registradoPor: REGISTRADO_POR,
+        registradoPor: nombreActual(),
       })
       dictamenes.unshift({
         id: `dict-${mantenimientoId}`,
@@ -379,40 +396,74 @@ function sembrarDatos() {
         mantenimientoId,
         bienId: bien.id,
         bien: snapshotDe(bien),
-        fecha: sumarMeses(fecha, 0),
+        fecha,
         causa: 'Costo de reparación no conviene',
         conclusion: 'El costo de reparación supera el valor de reposición del bien; se recomienda su baja definitiva.',
         costoReparacion: 3200,
         valorReposicion: 2800,
         destinoFinal: 'Destrucción / chatarra',
-        elaboradoPor: randomFrom(TECNICOS_OPCIONES),
+        elaboradoPor: tecnico(indice + 1),
       })
     })
 
-  // Preventivos de ejemplo sobre bienes activos: algunos concluidos, otros programados.
-  bienes
-    .filter((bien) => bien.estatus === 'Asignado' || bien.estatus === 'Por asignar')
-    .slice(0, 8)
-    .forEach((bien, indice) => {
-      contadorMantenimiento += 1
-      const periodicidad = randomFrom(PERIODICIDADES)
-      const fecha = randomFecha()
-      const concluido = indice % 2 === 0
-      mantenimientos.unshift({
-        id: `mant-${contadorMantenimiento}`,
-        folio: siguienteFolio('Preventivo'),
-        tipo: 'Preventivo',
-        bienId: bien.id,
-        fecha,
-        tecnico: randomFrom(TECNICOS_OPCIONES),
-        descripcion: 'Limpieza y revisión general programada',
-        periodicidad,
-        proximaFecha: sumarMeses(fecha, PERIODOS_MESES[periodicidad]),
-        estatus: concluido ? 'Concluido' : 'Programado',
-        fechaConclusion: concluido ? sumarMeses(fecha, 0) : undefined,
-        registradoPor: REGISTRADO_POR,
-      })
+  // Cada grupo usa bienes distintos entre sí, para que las alertas (una por bien) sean independientes.
+  const activos = bienes.filter((bien) => bien.estatus === 'Asignado' || bien.estatus === 'Por asignar')
+  const preventivo = (bien: Bien, indice: number, fecha: string, estatus: EstatusMantenimiento, periodicidad: Periodicidad) => {
+    contadorMantenimiento += 1
+    mantenimientos.unshift({
+      id: `mant-${contadorMantenimiento}`,
+      folio: siguienteFolio('Preventivo'),
+      tipo: 'Preventivo',
+      bienId: bien.id,
+      fecha,
+      tecnico: tecnico(indice),
+      descripcion: 'Limpieza y revisión general programada',
+      periodicidad,
+      proximaFecha: sumarMesesIso(fecha, PERIODOS_MESES[periodicidad]),
+      estatus,
+      fechaConclusion: estatus === 'Concluido' ? fecha : undefined,
+      registradoPor: nombreActual(),
     })
+  }
+
+  // Preventivos programados: 4 atrasados, 4 próximos y 2 lejanos.
+  const OFFSETS_PROGRAMADOS = [-20, -14, -8, -3, 2, 5, 9, 14, 25, 40]
+  OFFSETS_PROGRAMADOS.forEach((dias, indice) => {
+    const bien = activos[indice]
+    if (bien) preventivo(bien, indice, enDias(dias), 'Programado', PERIODICIDADES[indice % PERIODICIDADES.length]!)
+  })
+
+  // Preventivos concluidos en los últimos 60 días (alimentan la gráfica); según periodicidad y antigüedad,
+  // su próxima fecha queda vencida, por vencer o lejana.
+  for (let k = 0; k < 20; k += 1) {
+    const bien = activos[OFFSETS_PROGRAMADOS.length + k]
+    if (bien) preventivo(bien, k, enDias(-(2 + k * 3)), 'Concluido', PERIODICIDADES[k % PERIODICIDADES.length]!)
+  }
+
+  // Correctivos reparados en los últimos 60 días (alimentan la gráfica).
+  for (let k = 0; k < 10; k += 1) {
+    const bien = activos[OFFSETS_PROGRAMADOS.length + 20 + k]
+    if (!bien) continue
+    contadorMantenimiento += 1
+    const fecha = enDias(-(3 + k * 5))
+    mantenimientos.unshift({
+      id: `mant-${contadorMantenimiento}`,
+      folio: siguienteFolio('Correctivo'),
+      tipo: 'Correctivo',
+      bienId: bien.id,
+      fecha,
+      tecnico: tecnico(k),
+      descripcion: 'Reparación de falla reportada',
+      prioridad: PRIORIDADES_SEMILLA[k % PRIORIDADES_SEMILLA.length],
+      fallaReportada: FALLAS_EJEMPLO[k % FALLAS_EJEMPLO.length],
+      estatus: 'Concluido',
+      fechaConclusion: sumarDiasIso(fecha, 1),
+      costo: 500 + k * 120,
+      resultado: 'Reparado',
+      estatusPrevioBien: bien.estatus,
+      registradoPor: nombreActual(),
+    })
+  }
 }
 
 sembrarDatos()

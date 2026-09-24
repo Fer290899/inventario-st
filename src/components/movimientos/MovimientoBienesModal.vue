@@ -56,21 +56,21 @@
       <section class="border-t border-slate-200 pt-5">
         <h4 class="text-sm font-semibold text-slate-800">{{ tipo === 'Devolución' ? 'Datos de la devolución' : 'Datos del nuevo responsable' }}</h4>
         <p class="mt-0.5 text-xs text-slate-500">
-          {{ tipo === 'Devolución' ? 'Los bienes regresan a almacén como "Por asignar"' : 'Usuario que recibirá los bienes y su ubicación administrativa' }}
+          {{ tipo === 'Devolución' ? 'Los bienes regresan a almacén como "Por asignar"' : 'Responsable que recibirá los bienes y su ubicación administrativa' }}
         </p>
 
         <div class="mt-4 grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
           <template v-if="tipo !== 'Devolución'">
             <div>
-              <label class="mb-1.5 block text-sm font-semibold text-slate-700">Usuario al que se asigna <span class="text-rose-500">*</span></label>
+              <label class="mb-1.5 block text-sm font-semibold text-slate-700">Responsable al que se asigna <span class="text-rose-500">*</span></label>
               <BaseSelect v-model="usuario">
-                <option value="">Selecciona el usuario</option>
+                <option value="">Selecciona el responsable</option>
                 <option v-for="opcion in activas.usuarios" :key="opcion" :value="opcion">{{ opcion }}</option>
               </BaseSelect>
               <p v-if="conflictoDestino" role="alert" class="mt-2 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{{ conflictoDestino }}</p>
             </div>
             <div>
-              <label class="mb-1.5 block text-sm font-semibold text-slate-700">Puesto que el usuario ejerce <span class="text-rose-500">*</span></label>
+              <label class="mb-1.5 block text-sm font-semibold text-slate-700">Puesto que el responsable ejerce <span class="text-rose-500">*</span></label>
               <input v-model="puesto" type="text" placeholder="Ingresa el puesto" :class="INPUT" />
             </div>
           </template>
@@ -218,8 +218,8 @@ function quitar(bienId: string) {
 const subtitulo = computed(() => {
   const cantidad = seleccion.value.length
   const bienes = `${cantidad} ${cantidad === 1 ? 'bien' : 'bienes'}`
-  if (props.tipo === 'Asignación') return `Asigna ${bienes} a un usuario y genera su hoja de resguardo`
-  if (props.tipo === 'Reasignación') return `Pasa ${bienes} a otro usuario`
+  if (props.tipo === 'Asignación') return `Asigna ${bienes} a un responsable y genera su hoja de resguardo`
+  if (props.tipo === 'Reasignación') return `Pasa ${bienes} a otro responsable`
   return `Regresa ${bienes} a almacén y genera la hoja de entrega`
 })
 
@@ -237,7 +237,7 @@ const conflictoDestino = computed(() => {
   if (props.tipo !== 'Reasignación' || !usuario.value) return ''
   const yaLoTiene = seleccion.value.filter((bien) => bien.responsable === usuario.value)
   if (yaLoTiene.length === 0) return ''
-  return `${usuario.value} ya tiene ${yaLoTiene.length === 1 ? 'uno de los bienes' : `${yaLoTiene.length} de los bienes`}. Quítalos del movimiento o elige otro usuario.`
+  return `${usuario.value} ya tiene ${yaLoTiene.length === 1 ? 'uno de los bienes' : `${yaLoTiene.length} de los bienes`}. Quítalos del movimiento o elige otro responsable.`
 })
 
 const camposCompletos = computed(() => {

@@ -19,29 +19,7 @@
     </div>
 
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <!-- Pestañas -->
-      <div class="overflow-x-auto border-b border-slate-200 px-4 pt-4">
-        <div class="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
-          <button
-            v-for="pestana in PESTANAS"
-            :key="pestana.valor"
-            type="button"
-            class="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 sm:px-4"
-            :class="tabActivo === pestana.valor ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
-            :aria-pressed="tabActivo === pestana.valor"
-            @click="tabActivo = pestana.valor"
-          >
-            {{ pestana.etiqueta }}
-            <span
-              class="rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
-              :class="tabActivo === pestana.valor ? 'bg-blue-50 text-blue-700' : 'bg-slate-200/70 text-slate-500'"
-            >
-              {{ conteos[pestana.valor] }}
-            </span>
-          </button>
-        </div>
-        <div class="h-4"></div>
-      </div>
+      <TabsBar v-model="tabActivo" :tabs="tabsConConteo" label="Tipo de registro" />
 
       <!-- Controles: tamaño de página + buscador + filtros -->
       <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -258,6 +236,7 @@ import FiltrosMantenimientoModal from '@/components/mantenimiento/FiltrosManteni
 import ProgramarMantenimientoModal from '@/components/mantenimiento/ProgramarMantenimientoModal.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import TabsBar from '@/components/ui/TabsBar.vue'
 import FocoChip from '@/components/ui/FocoChip.vue'
 import IconButton from '@/components/ui/IconButton.vue'
 import PageSizeSelect from '@/components/ui/PageSizeSelect.vue'
@@ -415,6 +394,7 @@ const conteos = computed<Record<Pestana, number>>(() => ({
   Correctivo: mantenimientosBase.value.filter((registro) => registro.tipo === 'Correctivo').length,
   Dictámenes: dictamenesBase.value.length,
 }))
+const tabsConConteo = computed(() => PESTANAS.map((pestana) => ({ ...pestana, conteo: conteos.value[pestana.valor] })))
 
 const mantenimientosFiltrados = computed(() =>
   tabActivo.value === 'Todas' || tabActivo.value === 'Dictámenes'

@@ -41,29 +41,7 @@
     </div>
 
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <!-- Pestañas por tipo de hoja -->
-      <div class="overflow-x-auto border-b border-slate-200 px-4 pt-4">
-        <div class="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
-          <button
-            v-for="pestana in PESTANAS"
-            :key="pestana.valor"
-            type="button"
-            class="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 sm:px-4"
-            :class="tipoActivo === pestana.valor ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
-            :aria-pressed="tipoActivo === pestana.valor"
-            @click="tipoActivo = pestana.valor"
-          >
-            {{ pestana.etiqueta }}
-            <span
-              class="rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
-              :class="tipoActivo === pestana.valor ? 'bg-blue-50 text-blue-700' : 'bg-slate-200/70 text-slate-500'"
-            >
-              {{ conteos[pestana.valor] }}
-            </span>
-          </button>
-        </div>
-        <div class="h-4"></div>
-      </div>
+      <TabsBar v-model="tipoActivo" :tabs="tabsConConteo" label="Tipo de hoja" />
 
       <!-- Controles: tamaño de página + buscador + filtros -->
       <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -198,6 +176,7 @@ import VistaPreviaDocumento from '@/components/documentos/VistaPreviaDocumento.v
 import FiltrosHojasModal from '@/components/hojas/FiltrosHojasModal.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import TabsBar from '@/components/ui/TabsBar.vue'
 import IconButton from '@/components/ui/IconButton.vue'
 import PageSizeSelect from '@/components/ui/PageSizeSelect.vue'
 import SearchInput from '@/components/ui/SearchInput.vue'
@@ -278,6 +257,7 @@ const conteos = computed<Record<PestanaTipo, number>>(() => ({
   Resguardo: hojasBase.value.filter((hoja) => hoja.tipo === 'Resguardo').length,
   Entrega: hojasBase.value.filter((hoja) => hoja.tipo === 'Entrega').length,
 }))
+const tabsConConteo = computed(() => PESTANAS.map((pestana) => ({ ...pestana, conteo: conteos.value[pestana.valor] })))
 
 const hojasFiltradas = computed(() =>
   tipoActivo.value === 'todas' ? hojasBase.value : hojasBase.value.filter((hoja) => hoja.tipo === tipoActivo.value),

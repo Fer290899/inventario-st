@@ -9,7 +9,15 @@
     <form id="form-cuenta" class="grid grid-cols-1 gap-4" @submit.prevent="guardar">
       <div>
         <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="cuenta-nombre">Nombre completo <span class="text-rose-500">*</span></label>
-        <input id="cuenta-nombre" v-model="nombre" type="text" placeholder="Ej. Ana Torres Medina" autocomplete="off" :class="INPUT" />
+        <input
+          id="cuenta-nombre"
+          v-model="nombre"
+          type="text"
+          placeholder="Ej. Ana Torres Medina"
+          autocomplete="off"
+          :readonly="deTecnico"
+          :class="[INPUT, deTecnico ? 'cursor-not-allowed text-slate-500' : '']"
+        />
       </div>
 
       <div>
@@ -30,10 +38,10 @@
 
       <div>
         <label class="mb-1.5 block text-sm font-semibold text-slate-700">Rol <span class="text-rose-500">*</span></label>
-        <BaseSelect v-model="rolElegido" :disabled="propia" aria-label="Rol" data-doc="cuenta-rol">
-          <option v-for="opcion in ROLES" :key="opcion" :value="opcion">{{ opcion }}</option>
+        <BaseSelect v-model="rolElegido" :disabled="propia || deTecnico" aria-label="Rol" data-doc="cuenta-rol">
+          <option v-for="opcion in rolesDisponibles" :key="opcion" :value="opcion">{{ opcion }}</option>
         </BaseSelect>
-        <p class="mt-1 text-xs text-slate-400">{{ propia ? 'No puedes cambiar tu propio rol.' : DESCRIPCION_ROL[rolElegido] }}</p>
+        <p class="mt-1 text-xs text-slate-400">{{ notaRol }}</p>
       </div>
 
       <CampoPassword v-if="!cuenta" id="cuenta-password" v-model="password" />
@@ -95,6 +103,12 @@ watch(open, (abierto) => {
 })
 
 const propia = computed(() => props.cuenta !== null && esPropia(props.cuenta.id))
+// El rol Técnico solo existe ligado a un técnico: no se ofrece en cuentas sin él, y en las que lo tienen nombre y rol se editan desde Técnicos.
+const deTecnico = computed(() => props.cuenta?.tecnicoId !== undefined)
+const rolesDisponibles = computed(() => ROLES.filter((opcion) => opcion !== 'Técnico' || deTecnico.value))
+const notaRol = computed(() =>
+  deTecnico.value ? 'El nombre y el rol de una cuenta de técnico se editan desde Técnicos.' : propia.value ? 'No puedes cambiar tu propio rol.' : DESCRIPCION_ROL[rolElegido.value],
+)
 const errorUsuario = computed(() => (props.cuenta ? '' : errorUsername(username.value)))
 
 const subtitulo = computed(() =>

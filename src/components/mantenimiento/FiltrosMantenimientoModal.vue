@@ -26,7 +26,7 @@
           <label class="mb-1.5 block text-sm font-semibold text-slate-700">Técnico / proveedor</label>
           <BaseSelect v-model="draft.tecnico">
             <option value="">Todos</option>
-            <option v-for="opcion in TECNICOS_OPCIONES" :key="opcion" :value="opcion">{{ opcion }}</option>
+            <option v-for="opcion in nombresAsignados" :key="opcion" :value="opcion">{{ opcion }}</option>
           </BaseSelect>
         </div>
         <div>
@@ -66,10 +66,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import {
-  TECNICOS_OPCIONES,
   filtrosMantenimientoVacios,
+  useMantenimientosData,
   type EstatusMantenimiento,
   type FiltrosMantenimiento,
   type Prioridad,
@@ -78,6 +78,10 @@ import {
 import AppButton from '@/components/ui/AppButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
+
+// Histórico: todo el que aparece en los mantenimientos que el usuario puede ver, esté activo o no.
+const { mantenimientosVisibles } = useMantenimientosData()
+const nombresAsignados = computed(() => [...new Set(mantenimientosVisibles().map((registro) => registro.tecnico))].sort((a, b) => a.localeCompare(b, 'es')))
 
 const INPUT =
   'w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-400/60 focus:bg-white focus:ring-2 focus:ring-blue-500/30'

@@ -6,6 +6,8 @@ export interface UsuarioSesion {
   username: string
   nombre: string
   rol: Rol
+  /** Solo en cuentas de técnicos: a quién pertenece la cuenta */
+  tecnicoId?: string
 }
 
 interface Cuenta extends UsuarioSesion {
@@ -25,6 +27,7 @@ export interface DatosCuentaNueva {
   nombre: string
   rol: Rol
   password: string
+  tecnicoId?: string
 }
 
 export interface CambiosCuenta {
@@ -38,6 +41,7 @@ const ahora = new Date().toISOString()
 const CUENTAS = reactive<Cuenta[]>([
   { id: 'u-admin', username: 'admin', password: 'admin123', nombre: 'Administrador', rol: 'Administrador', activo: true, creadoEn: ahora, ultimoAcceso: null },
   { id: 'u-captura', username: 'capturista', password: 'captura123', nombre: 'Carla Capturista', rol: 'Capturista', activo: true, creadoEn: ahora, ultimoAcceso: null },
+  { id: 'u-tecnico', username: 'tecnico', password: 'tecnico123', nombre: 'Ricardo Peña Osorio', rol: 'Técnico', tecnicoId: 'tec-1', activo: true, creadoEn: ahora, ultimoAcceso: null },
   { id: 'u-consulta', username: 'consulta', password: 'consulta123', nombre: 'Carlos Consulta', rol: 'Consulta', activo: true, creadoEn: ahora, ultimoAcceso: null },
 ])
 
@@ -45,6 +49,7 @@ const CUENTAS = reactive<Cuenta[]>([
 export const CUENTAS_DEMO: ReadonlyArray<{ username: string; password: string; rol: Rol }> = [
   { username: 'admin', password: 'admin123', rol: 'Administrador' },
   { username: 'capturista', password: 'captura123', rol: 'Capturista' },
+  { username: 'tecnico', password: 'tecnico123', rol: 'Técnico' },
   { username: 'consulta', password: 'consulta123', rol: 'Consulta' },
 ]
 
@@ -54,8 +59,8 @@ function sinPassword({ password: _password, ...resto }: Cuenta): CuentaPublica {
   return resto
 }
 
-function aSesion({ id, username, nombre, rol }: Cuenta): UsuarioSesion {
-  return { id, username, nombre, rol }
+function aSesion({ id, username, nombre, rol, tecnicoId }: Cuenta): UsuarioSesion {
+  return tecnicoId ? { id, username, nombre, rol, tecnicoId } : { id, username, nombre, rol }
 }
 
 function normalizarUsername(username: string): string {
@@ -99,6 +104,7 @@ export const authService = {
       password: datos.password,
       nombre: datos.nombre.trim(),
       rol: datos.rol,
+      tecnicoId: datos.tecnicoId,
       activo: true,
       creadoEn: new Date().toISOString(),
       ultimoAcceso: null,

@@ -1,7 +1,8 @@
 import { reactive } from 'vue'
 import { hoyIso, sumarDiasIso, sumarMesesIso } from '@/utils/formato'
 import { registrarAuditoria } from './useAuditoria'
-import { nombreActual } from './useAuth'
+import { nombreActual, usuarioActual } from './useAuth'
+import { ASIGNABLES_SEMILLA } from './tecnicosSemilla'
 import { snapshotDe, useBienesData, type Bien, type BienSnapshot, type EstatusBien } from './useBienesData'
 
 export type TipoMantenimiento = 'Preventivo' | 'Correctivo'
@@ -28,7 +29,10 @@ export interface Mantenimiento {
   bienId: string
   /** Fecha ISO (YYYY-MM-DD), programada o de inicio */
   fecha: string
+  /** Nombre de quien lo ejecuta, tal como se programó (texto: los documentos ya emitidos no cambian si se renombra) */
   tecnico: string
+  /** Solo si lo ejecuta un técnico del catálogo (no un proveedor); es lo que limita lo que ve un rol Técnico */
+  tecnicoId?: string
   descripcion: string
   prioridad?: Prioridad
   fallaReportada?: string
@@ -77,15 +81,6 @@ export function filtrosMantenimientoVacios(): FiltrosMantenimiento {
   return { tipo: '', estatus: '', tecnico: '', prioridad: '', fechaDesde: '', fechaHasta: '' }
 }
 
-export const TECNICOS_OPCIONES = [
-  'Soporte Técnico Interno',
-  'ServiTec Refacciones S.A.',
-  'ElectroSoluciones del Bajío',
-  'Ricardo Peña Osorio',
-  'CompuServicios Integrales',
-  'Mantenimiento Industrial Cruz',
-]
-
 const PERIODICIDADES: Periodicidad[] = ['Mensual', 'Trimestral', 'Semestral', 'Anual']
 const PERIODOS_MESES: Record<Periodicidad, number> = { Mensual: 1, Trimestral: 3, Semestral: 6, Anual: 12 }
 export const CAUSAS_BAJA: CausaBaja[] = [
@@ -112,6 +107,7 @@ export interface NuevoMantenimiento {
   bienesIds: string[]
   fecha: string
   tecnico: string
+  tecnicoId?: string
   descripcion: string
   /** Solo Correctivo */
   prioridad?: Prioridad
@@ -127,6 +123,7 @@ export interface NuevoDictamenDirecto {
   bienesIds: string[]
   fecha: string
   tecnico: string
+  tecnicoId?: string
   descripcion: string
   causa: CausaBaja
   conclusion: string
@@ -174,6 +171,24 @@ function instantaneaBien(bien: Bien | undefined, bienId: string): BienSnapshot {
   return { id: bienId, nombre: '—', marca: '—', modelo: '—', numeroSerie: '—', numeroInventario: '—', caracteristicas: '' }
 }
 
+/**
+ * El rol Técnico solo ve los mantenimientos que se le asignaron (por su técnico ligado); el resto de roles ve todo.
+ * Lo usan las listas, el dashboard, las alertas y el historial para que cuenten lo mismo.
+ */
+function esVisibleParaSesion(mantenimiento: Mantenimiento): boolean {
+  const sesion = usuarioActual()
+  return sesion?.rol !== 'Técnico' || (sesion.tecnicoId !== undefined && mantenimiento.tecnicoId === sesion.tecnicoId)
+}
+
+function mantenimientosVisibles(): Mantenimiento[] {
+  return mantenimientos.filter(esVisibleParaSesion)
+}
+
+function dictamenesVisibles(): Dictamen[] {
+  const visibles = new Set(mantenimientosVisibles().map((mantenimiento) => mantenimiento.id))
+  return dictamenes.filter((dictamen) => visibles.has(dictamen.mantenimientoId))
+}
+
 let auditoriaSilenciada = false
 function auditar(accion: string, entidad: string, detalle: string) {
   if (!auditoriaSilenciada) registrarAuditoria('Mantenimiento', accion, entidad, detalle)
@@ -205,6 +220,7 @@ function iniciarMantenimiento(nuevo: NuevoMantenimiento): Mantenimiento[] {
       bienId,
       fecha: nuevo.fecha,
       tecnico: nuevo.tecnico,
+      tecnicoId: nuevo.tecnicoId,
       descripcion: nuevo.descripcion,
       estatus: 'Programado',
       registradoPor: nombreActual(),
@@ -239,6 +255,8 @@ function concluirMantenimiento(id: string, datos: DatosConclusion): Dictamen | n
   // ej. await mantenimientosApi.concluir(id, datos)
   const mantenimiento = mantenimientos.find((item) => item.id === id)
   if (!mantenimiento || mantenimiento.estatus === 'Concluido' || mantenimiento.estatus === 'Cancelado') return null
+  // Un técnico solo concluye lo suyo, aunque la interfaz nunca le ofrezca lo ajeno.
+  if (!esVisibleParaSesion(mantenimiento)) return null
 
   mantenimiento.estatus = 'Concluido'
   mantenimiento.fechaConclusion = datos.fechaConclusion
@@ -305,6 +323,7 @@ function generarDictamenesSinAuditoria(nuevo: NuevoDictamenDirecto): Dictamen[] 
     bienesIds: nuevo.bienesIds,
     fecha: nuevo.fecha,
     tecnico: nuevo.tecnico,
+    tecnicoId: nuevo.tecnicoId,
     descripcion: nuevo.descripcion,
     prioridad: 'Alta',
     fallaReportada: nuevo.descripcion,
@@ -342,7 +361,7 @@ function sembrarDatos() {
   const { bienes } = useBienesData()
   const hoy = hoyIso()
   const enDias = (dias: number) => sumarDiasIso(hoy, dias)
-  const tecnico = (indice: number) => TECNICOS_OPCIONES[indice % TECNICOS_OPCIONES.length]!
+  const asignado = (indice: number) => ASIGNABLES_SEMILLA[indice % ASIGNABLES_SEMILLA.length]!
 
   // Bienes que el mock ya marca "En reparación": se les asocia el correctivo que los dejó así,
   // con antigüedades escalonadas (algunos recientes, otros atorados hace meses).
@@ -356,7 +375,7 @@ function sembrarDatos() {
         tipo: 'Correctivo',
         bienId: bien.id,
         fecha: enDias(-ANTIGUEDAD_CORRECTIVOS_ABIERTOS[indice % ANTIGUEDAD_CORRECTIVOS_ABIERTOS.length]!),
-        tecnico: tecnico(indice),
+        ...asignado(indice),
         descripcion: 'Revisión por falla reportada por el usuario',
         prioridad: PRIORIDADES_SEMILLA[indice % PRIORIDADES_SEMILLA.length],
         fallaReportada: FALLAS_EJEMPLO[indice % FALLAS_EJEMPLO.length],
@@ -380,7 +399,7 @@ function sembrarDatos() {
         tipo: 'Correctivo',
         bienId: bien.id,
         fecha,
-        tecnico: tecnico(indice),
+        ...asignado(indice),
         descripcion: 'Diagnóstico de falla',
         prioridad: 'Alta',
         fallaReportada: FALLAS_EJEMPLO[indice % FALLAS_EJEMPLO.length],
@@ -402,7 +421,7 @@ function sembrarDatos() {
         costoReparacion: 3200,
         valorReposicion: 2800,
         destinoFinal: 'Destrucción / chatarra',
-        elaboradoPor: tecnico(indice + 1),
+        elaboradoPor: asignado(indice + 1).tecnico,
       })
     })
 
@@ -416,7 +435,7 @@ function sembrarDatos() {
       tipo: 'Preventivo',
       bienId: bien.id,
       fecha,
-      tecnico: tecnico(indice),
+      ...asignado(indice),
       descripcion: 'Limpieza y revisión general programada',
       periodicidad,
       proximaFecha: sumarMesesIso(fecha, PERIODOS_MESES[periodicidad]),
@@ -452,7 +471,7 @@ function sembrarDatos() {
       tipo: 'Correctivo',
       bienId: bien.id,
       fecha,
-      tecnico: tecnico(k),
+      ...asignado(k),
       descripcion: 'Reparación de falla reportada',
       prioridad: PRIORIDADES_SEMILLA[k % PRIORIDADES_SEMILLA.length],
       fallaReportada: FALLAS_EJEMPLO[k % FALLAS_EJEMPLO.length],
@@ -484,7 +503,8 @@ export function useMantenimientosData() {
   return {
     mantenimientos,
     dictamenes,
-    TECNICOS_OPCIONES,
+    mantenimientosVisibles,
+    dictamenesVisibles,
     iniciarMantenimiento,
     concluirMantenimiento,
     generarDictamenDirecto,

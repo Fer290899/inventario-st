@@ -23,7 +23,7 @@ export interface EventoHistorial {
 export function useHistorialBien() {
   const { bitacora } = useBienesData()
   const { movimientos, hojas } = useMovimientosData()
-  const { mantenimientos, dictamenes } = useMantenimientosData()
+  const { mantenimientosVisibles, dictamenesVisibles } = useMantenimientosData()
 
   function historialDe(bien: Bien): EventoHistorial[] {
     const orden = new Map<string, number>()
@@ -69,7 +69,7 @@ export function useHistorialBien() {
       })
     }
 
-    for (const mant of mantenimientos) {
+    for (const mant of mantenimientosVisibles()) {
       if (mant.bienId !== bien.id) continue
       agregar({
         clave: `${mant.id}-programado`,
@@ -104,7 +104,7 @@ export function useHistorialBien() {
       }
     }
 
-    for (const dictamen of dictamenes) {
+    for (const dictamen of dictamenesVisibles()) {
       if (dictamen.bienId !== bien.id) continue
       agregar({
         clave: dictamen.id,

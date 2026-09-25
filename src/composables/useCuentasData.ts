@@ -1,6 +1,7 @@
 import { computed } from 'vue'
 import type { Rol } from '@/config/permisos'
 import { authService, type CambiosCuenta, type CuentaPublica, type DatosCuentaNueva } from '@/services/authService'
+import { normalizarTexto } from '@/utils/formato'
 import { errorPassword } from '@/utils/password'
 import type { ResultadoAccion } from './useCatalogosData'
 import { usuarioActual } from './useAuth'
@@ -32,6 +33,10 @@ export function useCuentasData() {
     if (errorUsuario) return { ok: false, motivo: errorUsuario }
     const errorClave = errorPassword(datos.password)
     if (errorClave) return { ok: false, motivo: errorClave }
+    // El rol Técnico solo existe ligado a un técnico, y una cuenta ligada a un técnico solo puede tener ese rol.
+    if ((datos.rol === 'Técnico') !== (datos.tecnicoId !== undefined)) {
+      return { ok: false, motivo: 'El rol Técnico se asigna únicamente al crear el acceso de un técnico.' }
+    }
 
     // TODO: reemplazar por la llamada real, ej. await cuentasApi.crear(datos)
     const cuenta = authService.crearCuenta(datos)
@@ -45,6 +50,10 @@ export function useCuentasData() {
     if (cambios.nombre.trim() === '') return { ok: false, motivo: 'El nombre es obligatorio.' }
     // Con esta regla siempre queda al menos un administrador activo: nadie puede quitarse el acceso a sí mismo.
     if (esPropia(id) && cambios.rol !== cuenta.rol) return { ok: false, motivo: 'No puedes cambiar tu propio rol.' }
+    if (cuenta.tecnicoId && (cambios.rol !== 'Técnico' || cambios.nombre.trim() !== cuenta.nombre)) {
+      return { ok: false, motivo: 'El nombre y el rol de una cuenta de técnico se editan desde Técnicos.' }
+    }
+    if (!cuenta.tecnicoId && cambios.rol === 'Técnico') return { ok: false, motivo: 'El rol Técnico se asigna únicamente al crear el acceso de un técnico.' }
 
     const diferencias: string[] = []
     if (cuenta.nombre !== cambios.nombre.trim()) diferencias.push(`nombre: ${cuenta.nombre} → ${cambios.nombre.trim()}`)
@@ -80,5 +89,18 @@ export function useCuentasData() {
     return { ok: true }
   }
 
-  return { cuentas, esPropia, errorUsername, crear, actualizar, alternarEstatus, restablecerPassword }
+  /** Usuario libre a partir de un nombre: «Ricardo Peña Osorio» → «ricardo.pena». */
+  function sugerirUsername(nombre: string): string {
+    const palabras = normalizarTexto(nombre).split(/\s+/).map((palabra) => palabra.replace(/[^a-z0-9]/g, '')).filter(Boolean)
+    if (palabras.length === 0) return ''
+    const base = (palabras.length > 1 ? `${palabras[0]}.${palabras[1]}` : palabras[0]!).slice(0, 18)
+    if (!authService.existeUsername(base)) return base
+    for (let numero = 2; numero < 100; numero += 1) {
+      const candidato = `${base}${numero}`
+      if (!authService.existeUsername(candidato)) return candidato
+    }
+    return base
+  }
+
+  return { cuentas, esPropia, errorUsername, sugerirUsername, crear, actualizar, alternarEstatus, restablecerPassword }
 }

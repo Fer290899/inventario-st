@@ -64,7 +64,7 @@ export function useDashboardData(): DashboardData {
   // TODO: reemplazar por la llamada real al servicio/store de dashboard,
   // ej. await dashboardApi.getResumen(dias) / dashboardStore.fetchResumen(dias)
   const { bienes } = useBienesData()
-  const { mantenimientos, dictamenes } = useMantenimientosData()
+  const { mantenimientosVisibles, dictamenesVisibles } = useMantenimientosData()
   const { resumen, idsDeFoco } = useAlertasData()
 
   const kpis = computed<DashboardKpi[]>(() => {
@@ -110,7 +110,7 @@ export function useDashboardData(): DashboardData {
         id: 'bienesBaja',
         label: 'Bienes dados de baja',
         value: baja,
-        hint: `${dictamenes.length} ${dictamenes.length === 1 ? 'dictamen emitido' : 'dictámenes emitidos'}`,
+        hint: `${dictamenesVisibles().length} ${dictamenesVisibles().length === 1 ? 'dictamen emitido' : 'dictámenes emitidos'}`,
         to: { path: '/dashboard/bienes', query: { estatus: 'Baja' } },
       },
       {
@@ -125,18 +125,18 @@ export function useDashboardData(): DashboardData {
   })
 
   const mantenimientosPreventivosPorDia = computed(() =>
-    serieDiaria(mantenimientos.filter((item) => item.tipo === 'Preventivo' && item.estatus !== 'Cancelado').map((item) => item.fecha)),
+    serieDiaria(mantenimientosVisibles().filter((item) => item.tipo === 'Preventivo' && item.estatus !== 'Cancelado').map((item) => item.fecha)),
   )
   const mantenimientosCorrectivosConcluidosPorDia = computed(() =>
     serieDiaria(
-      mantenimientos
+      mantenimientosVisibles()
         .filter((item) => item.tipo === 'Correctivo' && item.estatus === 'Concluido' && item.fechaConclusion)
         .map((item) => item.fechaConclusion!),
     ),
   )
 
-  const ultimoPreventivo = computed(() => ultimoConcluido(mantenimientos.filter((item) => item.tipo === 'Preventivo')))
-  const ultimoCorrectivo = computed(() => ultimoConcluido(mantenimientos.filter((item) => item.tipo === 'Correctivo')))
+  const ultimoPreventivo = computed(() => ultimoConcluido(mantenimientosVisibles().filter((item) => item.tipo === 'Preventivo')))
+  const ultimoCorrectivo = computed(() => ultimoConcluido(mantenimientosVisibles().filter((item) => item.tipo === 'Correctivo')))
 
   return { kpis, mantenimientosPreventivosPorDia, mantenimientosCorrectivosConcluidosPorDia, ultimoPreventivo, ultimoCorrectivo }
 }

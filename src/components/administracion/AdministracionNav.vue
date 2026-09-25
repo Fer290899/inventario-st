@@ -1,8 +1,9 @@
 <template>
-  <div>
+  <!-- En escritorio la tarjeta se queda a la vista mientras se recorre una tabla larga. -->
+  <div class="min-[1366px]:sticky min-[1366px]:top-4">
     <!-- Móvil: selector agrupado -->
     <div class="min-[1366px]:hidden">
-      <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400" for="administracion-seccion">Sección</label>
+      <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500" for="administracion-seccion">Sección</label>
       <BaseSelect id="administracion-seccion" :model-value="seccion" data-doc="seccion-movil" @update:model-value="ir">
         <optgroup v-for="grupo in GRUPOS" :key="grupo.titulo" :label="grupo.titulo">
           <option v-for="clave in grupo.secciones" :key="clave" :value="clave">{{ etiquetaMovil(clave) }}</option>
@@ -13,7 +14,7 @@
     <!-- Escritorio: menú lateral -->
     <nav class="hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm min-[1366px]:block" aria-label="Secciones de administración" data-doc="nav-administracion">
       <div v-for="(grupo, indice) in GRUPOS" :key="grupo.titulo" :class="indice > 0 ? 'mt-2 border-t border-slate-100 pt-2' : ''">
-        <p class="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{{ grupo.titulo }}</p>
+        <p class="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{{ grupo.titulo }}</p>
         <RouterLink
           v-for="clave in grupo.secciones"
           :key="clave"
@@ -27,8 +28,8 @@
           {{ SECCIONES[clave].titulo }}
           <span
             v-if="conteos[clave] !== undefined"
-            class="rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
-            :class="seccion === clave ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'"
+            class="rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums"
+            :class="seccion === clave ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'"
           >
             {{ conteos[clave] }}
           </span>

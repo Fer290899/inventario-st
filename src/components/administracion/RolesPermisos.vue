@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6 p-4 sm:p-6">
-    <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
       <div v-for="rol in ROLES" :key="rol" class="rounded-xl border border-slate-200 p-4" data-doc="tarjeta-rol">
         <div class="flex items-center justify-between gap-2">
           <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" :class="ESTILO_ROL[rol]">{{ rol }}</span>
@@ -21,7 +21,7 @@
         <tbody>
           <template v-for="grupo in GRUPOS_PERMISO" :key="grupo.titulo">
             <tr class="bg-slate-50/60">
-              <th colspan="4" class="px-4 py-2 text-xs font-semibold text-slate-500">{{ grupo.titulo }}</th>
+              <th :colspan="ROLES.length + 1" class="px-4 py-2 text-xs font-semibold text-slate-500">{{ grupo.titulo }}</th>
             </tr>
             <tr v-for="permiso in grupo.permisos" :key="permiso" class="border-t border-slate-100" :data-doc="`permiso-${permiso}`">
               <td class="px-4 py-2.5 text-slate-700">{{ etiqueta(permiso) }}</td>
@@ -40,7 +40,7 @@
     </div>
 
     <p class="text-xs text-slate-500">
-      Consultar, imprimir y exportar están abiertos a todos los roles. Los roles son fijos: se asignan a cada persona desde Cuentas de acceso.
+      Consultar, imprimir y exportar están abiertos a todos los roles. El rol Técnico solo ve y concluye los mantenimientos asignados a él. Los roles son fijos: se asignan desde Cuentas de acceso (Técnico, al crear el acceso de un técnico).
     </p>
   </div>
 </template>
@@ -55,11 +55,12 @@ const { cuentas } = useCuentasData()
 const ESTILO_ROL: Record<Rol, string> = {
   Administrador: 'bg-violet-50 text-violet-700',
   Capturista: 'bg-blue-50 text-blue-700',
+  Técnico: 'bg-amber-50 text-amber-700',
   Consulta: 'bg-slate-100 text-slate-600',
 }
 
 const activasPorRol = computed<Record<Rol, number>>(() => {
-  const cuenta: Record<Rol, number> = { Administrador: 0, Capturista: 0, Consulta: 0 }
+  const cuenta: Record<Rol, number> = { Administrador: 0, Capturista: 0, Técnico: 0, Consulta: 0 }
   for (const item of cuentas.value) if (item.activo) cuenta[item.rol] += 1
   return cuenta
 })

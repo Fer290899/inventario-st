@@ -265,7 +265,7 @@ import SearchInput from '@/components/ui/SearchInput.vue'
 import TablePagination from '@/components/ui/TablePagination.vue'
 
 const { bienes } = useBienesData()
-const { mantenimientos, dictamenes, iniciarMantenimiento, concluirMantenimiento, generarDictamenDirecto } = useMantenimientosData()
+const { mantenimientos, mantenimientosVisibles, dictamenesVisibles, iniciarMantenimiento, concluirMantenimiento, generarDictamenDirecto } = useMantenimientosData()
 const toast = useToast()
 
 type Pestana = 'Todas' | TipoMantenimiento | 'Dictámenes'
@@ -387,7 +387,7 @@ function coincideConFiltros(registro: Mantenimiento): boolean {
 const mantenimientosBase = computed<Mantenimiento[]>(() => {
   const termino = normalizar(busqueda.value.trim())
 
-  return mantenimientos.filter((registro) => {
+  return mantenimientosVisibles().filter((registro) => {
     const coincideBusqueda =
       !termino ||
       [registro.folio, bienDe(registro.bienId)?.nombre ?? '', registro.tecnico, registro.descripcion].some((campo) =>
@@ -399,6 +399,7 @@ const mantenimientosBase = computed<Mantenimiento[]>(() => {
 
 const dictamenesBase = computed<Dictamen[]>(() => {
   const termino = normalizar(busqueda.value.trim())
+  const dictamenes = dictamenesVisibles()
   if (!termino) return dictamenes
 
   return dictamenes.filter((dictamen) =>

@@ -1,4 +1,4 @@
-export type Rol = 'Administrador' | 'Capturista' | 'Consulta'
+export type Rol = 'Administrador' | 'Capturista' | 'Técnico' | 'Consulta'
 
 export type Permiso =
   | 'bienes:crear'
@@ -17,14 +17,17 @@ const CAPTURA: Permiso[] = ['bienes:crear', 'bienes:editar', 'bienes:importar', 
 export const PERMISOS_POR_ROL: Record<Rol, Permiso[]> = {
   Administrador: [...CAPTURA, 'dictamen:emitir', 'tipos:gestionar', 'admin:gestionar'],
   Capturista: CAPTURA,
+  // Solo concluye mantenimientos, y únicamente los suyos: ese límite lo aplica useMantenimientosData.
+  Técnico: ['mantenimiento:concluir'],
   Consulta: [],
 }
 
-export const ROLES: readonly Rol[] = ['Administrador', 'Capturista', 'Consulta']
+export const ROLES: readonly Rol[] = ['Administrador', 'Capturista', 'Técnico', 'Consulta']
 
 export const DESCRIPCION_ROL: Record<Rol, string> = {
   Administrador: 'Control total: opera el sistema, emite bajas y administra catálogos, cuentas y configuración.',
   Capturista: 'Registra y mueve bienes y da mantenimiento, sin emitir bajas ni administrar el sistema.',
+  Técnico: 'Ve y concluye únicamente los mantenimientos que se le asignaron; consulta, imprime y exporta.',
   Consulta: 'Solo lectura: consulta, imprime y exporta.',
 }
 

@@ -90,7 +90,7 @@
           <label class="mb-1.5 block text-sm font-semibold text-slate-700">Elaborado por <span class="text-rose-500">*</span></label>
           <BaseSelect v-model="elaboradoPor">
             <option value="">Selecciona quién elabora el dictamen</option>
-            <option v-for="opcion in TECNICOS_OPCIONES" :key="opcion" :value="opcion">{{ opcion }}</option>
+            <OpcionesTecnico />
           </BaseSelect>
         </div>
         <p class="text-xs text-rose-700">El bien pasará a estatus «Baja» al guardar.</p>
@@ -122,7 +122,6 @@ import { useBienesData } from '@/composables/useBienesData'
 import {
   CAUSAS_BAJA,
   DESTINOS_FINALES,
-  TECNICOS_OPCIONES,
   type CausaBaja,
   type DatosConclusion,
   type DestinoFinal,
@@ -130,6 +129,7 @@ import {
   type ResultadoCorrectivo,
 } from '@/composables/useMantenimientosData'
 import AppButton from '@/components/ui/AppButton.vue'
+import OpcionesTecnico from './OpcionesTecnico.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 

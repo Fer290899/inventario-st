@@ -104,7 +104,7 @@
             <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ ETIQUETA_TECNICO[tipo] }} <span class="text-rose-500">*</span></label>
             <BaseSelect v-model="tecnico">
               <option value="">Selecciona un técnico o proveedor</option>
-              <option v-for="opcion in TECNICOS_OPCIONES" :key="opcion" :value="opcion">{{ opcion }}</option>
+              <OpcionesTecnico />
             </BaseSelect>
           </div>
 
@@ -158,7 +158,7 @@
               <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ ETIQUETA_TECNICO[tipo] }} <span class="text-rose-500">*</span></label>
               <BaseSelect v-model="tecnico">
                 <option value="">Selecciona un técnico o proveedor</option>
-                <option v-for="opcion in TECNICOS_OPCIONES" :key="opcion" :value="opcion">{{ opcion }}</option>
+                <OpcionesTecnico />
               </BaseSelect>
             </div>
             <div>
@@ -213,7 +213,7 @@
             <label class="mb-1.5 block text-sm font-semibold text-slate-700">Elaborado por <span class="text-rose-500">*</span></label>
             <BaseSelect v-model="elaboradoPor">
               <option value="">Selecciona quién elabora el dictamen</option>
-              <option v-for="opcion in TECNICOS_OPCIONES" :key="opcion" :value="opcion">{{ opcion }}</option>
+              <OpcionesTecnico />
             </BaseSelect>
           </div>
           <p class="text-xs text-rose-700">{{ seleccion.length === 1 ? 'El bien pasará' : 'Los bienes pasarán' }} a estatus «Baja» al guardar.</p>
@@ -233,10 +233,10 @@ import { useAuth } from '@/composables/useAuth'
 import { motivoSinPermiso } from '@/config/permisos'
 import { computed, ref, watch } from 'vue'
 import { useBienesData, type Bien } from '@/composables/useBienesData'
+import { useTecnicosData } from '@/composables/useTecnicosData'
 import {
   CAUSAS_BAJA,
   DESTINOS_FINALES,
-  TECNICOS_OPCIONES,
   type CausaBaja,
   type DestinoFinal,
   type NuevoDictamenDirecto,
@@ -251,6 +251,7 @@ import BaseSelect from '@/components/ui/BaseSelect.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import IconButton from '@/components/ui/IconButton.vue'
 import SearchInput from '@/components/ui/SearchInput.vue'
+import OpcionesTecnico from './OpcionesTecnico.vue'
 
 /** El modal genera cualquiera de los 3: Preventivo/Correctivo quedan pendientes; Dictamen se genera y concluye de una vez. */
 type TipoRegistro = TipoMantenimiento | 'Dictamen'
@@ -342,6 +343,7 @@ const tipo = ref<TipoRegistro>(bloqueada(props.tipoInicial) ? 'Preventivo' : pro
 const seleccion = ref<Bien[]>([])
 const fecha = ref(hoy())
 const tecnico = ref('')
+const { idPorNombre } = useTecnicosData()
 const descripcion = ref('')
 const prioridad = ref<Prioridad | ''>('')
 const fallaReportada = ref('')
@@ -452,6 +454,7 @@ function confirmar() {
     bienesIds: seleccion.value.map((bien) => bien.id),
     fecha: fecha.value,
     tecnico: tecnico.value,
+    tecnicoId: idPorNombre(tecnico.value),
     descripcion: descripcion.value.trim(),
   }
 

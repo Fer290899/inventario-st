@@ -1,6 +1,6 @@
 import type { Catalogo } from '@/composables/useCatalogosData'
 
-export type Seccion = Catalogo | 'institucion' | 'alertas' | 'cuentas' | 'roles' | 'bitacora'
+export type Seccion = Catalogo | 'tecnico' | 'institucion' | 'alertas' | 'cuentas' | 'roles' | 'bitacora'
 
 export interface InfoSeccion {
   titulo: string
@@ -17,7 +17,13 @@ export const SECCIONES: Record<Seccion, InfoSeccion> = {
     titulo: 'Responsables',
     singular: 'Responsable',
     femenino: false,
-    descripcion: 'Personas que reciben bienes en resguardo. No son cuentas de acceso al sistema.',
+    descripcion: 'Personas que reciben bienes en resguardo. No son cuentas de acceso al sistema; los técnicos se administran en Técnicos.',
+  },
+  tecnico: {
+    titulo: 'Técnicos',
+    singular: 'Técnico',
+    femenino: false,
+    descripcion: 'Personal que da mantenimiento a los bienes y puede tener acceso al sistema con el rol Técnico. Los proveedores externos se eligen aparte al programar.',
   },
   institucion: {
     titulo: 'Institución',
@@ -47,7 +53,7 @@ export const SECCIONES: Record<Seccion, InfoSeccion> = {
 }
 
 export const GRUPOS: ReadonlyArray<{ titulo: string; secciones: readonly Seccion[] }> = [
-  { titulo: 'Catálogos', secciones: ['ubicacion', 'direccion', 'departamento', 'usuario'] },
+  { titulo: 'Catálogos', secciones: ['ubicacion', 'direccion', 'departamento', 'usuario', 'tecnico'] },
   { titulo: 'Configuración', secciones: ['institucion', 'alertas'] },
   { titulo: 'Seguridad', secciones: ['cuentas', 'roles', 'bitacora'] },
 ]
@@ -55,7 +61,7 @@ export const GRUPOS: ReadonlyArray<{ titulo: string; secciones: readonly Seccion
 export const SECCION_INICIAL: Seccion = 'ubicacion'
 
 /** Secciones con un botón «Agregar …» en su encabezado. */
-export const SECCIONES_CON_ALTA: readonly Seccion[] = ['ubicacion', 'direccion', 'departamento', 'usuario', 'cuentas']
+export const SECCIONES_CON_ALTA: readonly Seccion[] = ['ubicacion', 'direccion', 'departamento', 'usuario', 'tecnico', 'cuentas']
 
 const CATALOGOS: readonly Seccion[] = ['ubicacion', 'direccion', 'departamento', 'usuario']
 

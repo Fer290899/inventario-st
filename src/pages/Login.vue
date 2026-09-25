@@ -146,7 +146,7 @@ import { CUENTAS_DEMO } from '@/services/authService'
 
 const router = useRouter()
 const route = useRoute()
-const { iniciarSesion } = useAuth()
+const { iniciarSesion, rol } = useAuth()
 
 const esDesarrollo = import.meta.env.DEV
 
@@ -168,7 +168,9 @@ function usarCuenta(username: string, password: string) {
 // Solo se acepta un destino interno del dashboard, para que ?redirect no sirva de redirección abierta.
 function destino(): string {
   const pedido = route.query.redirect
-  return typeof pedido === 'string' && pedido.startsWith('/dashboard') ? pedido : '/dashboard'
+  if (typeof pedido === 'string' && pedido.startsWith('/dashboard')) return pedido
+  // Quien entra como técnico trabaja en Mantenimiento: ahí aterriza.
+  return rol.value === 'Técnico' ? '/dashboard/mantenimiento' : '/dashboard'
 }
 
 async function handleLogin() {

@@ -76,14 +76,14 @@ function actualizarUmbrales(datos: UmbralesAlertas) {
 }
 
 const { bienes } = useBienesData()
-const { mantenimientos } = useMantenimientosData()
+const { mantenimientosVisibles } = useMantenimientosData()
 
 const estaPendiente = (item: Mantenimiento) => item.estatus === 'Programado' || item.estatus === 'En curso'
 const nombreBien = (bien: Bien) => `${bien.nombre} ${bien.marca}`.trim()
 
 function alertasPreventivas(hoy: string, porId: Map<string, Bien>): Alerta[] {
   const porBien = new Map<string, Mantenimiento[]>()
-  for (const item of mantenimientos) {
+  for (const item of mantenimientosVisibles()) {
     if (item.tipo !== 'Preventivo' || item.estatus === 'Cancelado') continue
     porBien.set(item.bienId, [...(porBien.get(item.bienId) ?? []), item])
   }
@@ -136,7 +136,7 @@ function alertasPreventivas(hoy: string, porId: Map<string, Bien>): Alerta[] {
 
 function alertasCorrectivas(hoy: string, porId: Map<string, Bien>): Alerta[] {
   const alertas: Alerta[] = []
-  for (const item of mantenimientos) {
+  for (const item of mantenimientosVisibles()) {
     if (item.tipo !== 'Correctivo' || !estaPendiente(item)) continue
     const dias = diasEntre(item.fecha, hoy)
     if (dias < umbrales.diasCorrectivoAtorado) continue
@@ -210,10 +210,10 @@ const resumen = computed(() => {
 /** Ids que cumplen el foco: de bien para garantías, de mantenimiento para todo lo demás. */
 function idsDeFoco(foco: FocoVista): Set<string> {
   if (foco === 'preventivos-pendientes') {
-    return new Set(mantenimientos.filter((item) => item.tipo === 'Preventivo' && estaPendiente(item)).map((item) => item.id))
+    return new Set(mantenimientosVisibles().filter((item) => item.tipo === 'Preventivo' && estaPendiente(item)).map((item) => item.id))
   }
   if (foco === 'correctivos-abiertos') {
-    return new Set(mantenimientos.filter((item) => item.tipo === 'Correctivo' && estaPendiente(item)).map((item) => item.id))
+    return new Set(mantenimientosVisibles().filter((item) => item.tipo === 'Correctivo' && estaPendiente(item)).map((item) => item.id))
   }
   return new Set(alertas.value.filter((alerta) => alerta.foco === foco).map((alerta) => alerta.entidadId))
 }

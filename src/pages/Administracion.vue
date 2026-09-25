@@ -26,6 +26,7 @@
 
       <InstitucionForm v-if="tabActivo === 'institucion'" />
       <AlertasForm v-else-if="tabActivo === 'alertas'" />
+      <TecnicosTab v-else-if="tabActivo === 'tecnico'" ref="tecnicosTab" />
       <CuentasTab v-else-if="tabActivo === 'cuentas'" ref="cuentasTab" />
       <RolesPermisos v-else-if="tabActivo === 'roles'" />
       <BitacoraTab v-else-if="tabActivo === 'bitacora'" />
@@ -211,6 +212,7 @@ import {
   type Usuario,
 } from '@/composables/useCatalogosData'
 import { useCuentasData } from '@/composables/useCuentasData'
+import { useTecnicosData } from '@/composables/useTecnicosData'
 import { usePaginacion } from '@/composables/usePaginacion'
 import { useToast } from '@/composables/useToast'
 import CatalogoModal from '@/components/administracion/CatalogoModal.vue'
@@ -220,6 +222,7 @@ import BitacoraTab from '@/components/administracion/BitacoraTab.vue'
 import CuentasTab from '@/components/administracion/CuentasTab.vue'
 import InstitucionForm from '@/components/administracion/InstitucionForm.vue'
 import RolesPermisos from '@/components/administracion/RolesPermisos.vue'
+import TecnicosTab from '@/components/administracion/TecnicosTab.vue'
 import UsuarioModal from '@/components/administracion/UsuarioModal.vue'
 import { ICONO_EDITAR, ICONO_ELIMINAR, ICONO_INACTIVAR, ICONO_REACTIVAR } from '@/components/administracion/iconos'
 import { SECCIONES, SECCIONES_CON_ALTA, esCatalogo, seccionDesdeConsulta, type Seccion } from '@/components/administracion/secciones'
@@ -247,6 +250,7 @@ const {
 } = useCatalogosData()
 const toast = useToast()
 const { cuentas } = useCuentasData()
+const { tecnicos } = useTecnicosData()
 
 
 const ESTATUS_ACTIVO = 'bg-emerald-50 text-emerald-700'
@@ -266,12 +270,14 @@ const conteos = computed<Partial<Record<Seccion, number>>>(() => ({
   direccion: direcciones.length,
   departamento: departamentos.length,
   usuario: usuarios.length,
+  tecnico: tecnicos.length,
   cuentas: cuentas.value.length,
 }))
 
 const textoAgregar = computed(() => `Agregar ${SECCIONES[tabActivo.value].singular.toLowerCase()}`)
 
 const cuentasTab = ref<InstanceType<typeof CuentasTab> | null>(null)
+const tecnicosTab = ref<InstanceType<typeof TecnicosTab> | null>(null)
 
 // El tamaño de página mínimo es 10: con menos elementos en total no hay nada que paginar.
 const TAMANO_PAGINA_MINIMO = 10
@@ -338,6 +344,10 @@ const usuarioEditando = ref<Usuario | null>(null)
 function abrirAlta() {
   if (tabActivo.value === 'cuentas') {
     cuentasTab.value?.abrirAlta()
+    return
+  }
+  if (tabActivo.value === 'tecnico') {
+    tecnicosTab.value?.abrirAlta()
     return
   }
   if (catalogo.value === 'usuario') {

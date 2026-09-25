@@ -12,6 +12,7 @@
             <th class="whitespace-nowrap px-3 py-3">Nombre</th>
             <th class="whitespace-nowrap px-3 py-3">Usuario</th>
             <th class="whitespace-nowrap px-3 py-3">Rol</th>
+            <th class="whitespace-nowrap px-3 py-3">Vinculada a</th>
             <th class="whitespace-nowrap px-3 py-3">Estatus</th>
             <th class="whitespace-nowrap px-3 py-3">Último acceso</th>
             <th class="whitespace-nowrap px-3 py-3">Acciones</th>
@@ -27,6 +28,7 @@
             <td class="whitespace-nowrap px-3 py-2.5">
               <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="ESTILO_ROL[cuenta.rol]">{{ cuenta.rol }}</span>
             </td>
+            <td class="whitespace-nowrap px-3 py-2.5 text-slate-600" data-doc="vinculo-cuenta">{{ cuenta.tecnicoId ? 'Técnico' : '—' }}</td>
             <td class="whitespace-nowrap px-3 py-2.5">
               <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="cuenta.activo ? ESTATUS_ACTIVO : ESTATUS_INACTIVO">
                 {{ cuenta.activo ? 'Activa' : 'Inactiva' }}
@@ -60,7 +62,7 @@
           </tr>
 
           <tr v-if="cuentasPagina.length === 0">
-            <td colspan="6">
+            <td colspan="7">
               <EmptyState mensaje="No se encontraron cuentas que coincidan con la búsqueda." />
             </td>
           </tr>
@@ -84,6 +86,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import type { Rol } from '@/config/permisos'
 import { useCuentasData, type CuentaPublica } from '@/composables/useCuentasData'
 import { usePaginacion } from '@/composables/usePaginacion'
@@ -106,10 +109,13 @@ const ESTATUS_INACTIVO = 'bg-slate-100 text-slate-500'
 const ESTILO_ROL: Record<Rol, string> = {
   Administrador: 'bg-violet-50 text-violet-700',
   Capturista: 'bg-blue-50 text-blue-700',
+  Técnico: 'bg-amber-50 text-amber-700',
   Consulta: 'bg-slate-100 text-slate-600',
 }
 
-const busqueda = ref('')
+// «Ver cuenta» desde Técnicos llega con el usuario ya buscado (?buscar=).
+const route = useRoute()
+const busqueda = ref(typeof route.query.buscar === 'string' ? route.query.buscar : '')
 const pageSize = ref(10)
 
 const filtradas = computed(() => {

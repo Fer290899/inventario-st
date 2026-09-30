@@ -94,17 +94,28 @@
                   <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="ESTATUS_ESTILOS[registro.estatus]">{{ registro.estatus }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-2.5">
-                  <IconButton
-                    v-if="registro.estatus === 'Programado' || registro.estatus === 'En curso'"
-                    :label="can('mantenimiento:concluir') ? 'Concluir mantenimiento' : `Concluir mantenimiento (${motivoSinPermiso('mantenimiento:concluir', rol)})`"
-                    :disabled="!can('mantenimiento:concluir')"
-                    tone="emerald"
-                    @click="abrirConclusion(registro)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </IconButton>
+                  <div v-if="registro.estatus === 'Programado' || registro.estatus === 'En curso'" class="flex items-center gap-1">
+                    <IconButton
+                      :label="can('mantenimiento:concluir') ? 'Concluir mantenimiento' : `Concluir mantenimiento (${motivoSinPermiso('mantenimiento:concluir', rol)})`"
+                      :disabled="!can('mantenimiento:concluir')"
+                      tone="emerald"
+                      @click="abrirConclusion(registro)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </IconButton>
+                    <IconButton
+                      :label="can('mantenimiento:programar') ? 'Cancelar mantenimiento' : `Cancelar mantenimiento (${motivoSinPermiso('mantenimiento:programar', rol)})`"
+                      :disabled="!can('mantenimiento:programar')"
+                      tone="amber"
+                      @click="abrirCancelacion(registro)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </IconButton>
+                  </div>
                   <span v-else class="text-slate-300">—</span>
                 </td>
               </tr>
@@ -129,10 +140,30 @@
 
       <!-- Tabla: Dictámenes -->
       <template v-else>
+        <div v-if="dictamenesSeleccionados.length > 0" class="flex flex-wrap items-center gap-2 border-b border-blue-100 bg-blue-50/60 px-4 py-2.5">
+          <span class="mr-2 text-sm font-medium tabular-nums text-blue-800">
+            {{ dictamenesSeleccionados.length }} {{ dictamenesSeleccionados.length === 1 ? 'dictamen seleccionado' : 'dictámenes seleccionados' }}
+          </span>
+          <AppButton size="sm" data-doc="imprimir-seleccion-dictamenes" @click="mostrarImpresionLoteDictamenes = true">Imprimir seleccionados</AppButton>
+          <AppButton variant="ghost" size="sm" class="ml-auto" @click="limpiarSeleccionDictamenes">Limpiar selección</AppButton>
+        </div>
+
         <div class="max-h-[600px] overflow-auto">
           <table class="w-full text-left text-sm">
             <thead class="sticky top-0 z-10 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 shadow-[0_1px_0_0] shadow-slate-200">
               <tr>
+                <th class="w-10 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    aria-label="Seleccionar los dictámenes de esta página"
+                    title="Seleccionar los dictámenes de esta página"
+                    class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/40 disabled:cursor-not-allowed disabled:opacity-40"
+                    :checked="todaLaPaginaDeDictamenesSeleccionada"
+                    :indeterminate="algoDeLaPaginaDeDictamenesSeleccionado && !todaLaPaginaDeDictamenesSeleccionada"
+                    :disabled="dictamenesPagina.length === 0"
+                    @change="alternarPaginaDictamenes"
+                  />
+                </th>
                 <th class="whitespace-nowrap px-4 py-3">Folio</th>
                 <th class="whitespace-nowrap px-4 py-3">Bien</th>
                 <th class="whitespace-nowrap px-4 py-3">Fecha</th>
@@ -146,7 +177,16 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-              <tr v-for="dictamen in dictamenesPagina" :key="dictamen.id" class="transition hover:bg-slate-50">
+              <tr v-for="dictamen in dictamenesPagina" :key="dictamen.id" class="transition hover:bg-slate-50" :class="{ 'bg-blue-50/40': seleccionadosDictamenes.has(dictamen.id) }">
+                <td class="px-4 py-2.5">
+                  <input
+                    type="checkbox"
+                    :aria-label="`Seleccionar dictamen ${dictamen.folio}`"
+                    class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/40"
+                    :checked="seleccionadosDictamenes.has(dictamen.id)"
+                    @change="alternarSeleccionDictamen(dictamen.id)"
+                  />
+                </td>
                 <td class="whitespace-nowrap px-4 py-2.5 font-mono text-xs font-medium tabular-nums text-slate-800">{{ dictamen.folio }}</td>
                 <td class="whitespace-nowrap px-4 py-2.5">
                   <p class="font-medium text-slate-800">{{ dictamen.bien.nombre }}</p>
@@ -174,7 +214,7 @@
               </tr>
 
               <tr v-if="dictamenesPagina.length === 0">
-                <td colspan="10">
+                <td colspan="11">
                   <EmptyState mensaje="No se encontraron dictámenes que coincidan con la búsqueda." />
                 </td>
               </tr>
@@ -194,6 +234,7 @@
 
     <ProgramarMantenimientoModal v-model:open="mostrarModalProgramar" :tipo-inicial="tipoInicialProgramar" :bienes="[]" @confirmar="onConfirmarProgramar" />
     <ConcluirMantenimientoModal v-model:open="mostrarModalConclusion" :mantenimiento="mantenimientoConcluir" @confirmar="onConfirmarConclusion" />
+    <CancelarMantenimientoModal v-model:open="mostrarModalCancelar" :mantenimiento="mantenimientoCancelar" @confirmar="onConfirmarCancelacion" />
     <FiltrosMantenimientoModal v-model:open="mostrarModalFiltros" :filtros="filtros" @aplicar="onAplicarFiltros" />
 
     <VistaPreviaDocumento
@@ -202,6 +243,16 @@
       :subtitle="dictamenImpresion?.bien.numeroInventario"
     >
       <DocumentoDictamen v-if="dictamenImpresion" :dictamen="dictamenImpresion" />
+    </VistaPreviaDocumento>
+
+    <VistaPreviaDocumento
+      v-model:open="mostrarImpresionLoteDictamenes"
+      title="Dictámenes seleccionados"
+      :subtitle="`${dictamenesSeleccionados.length} ${dictamenesSeleccionados.length === 1 ? 'dictamen' : 'dictámenes'}`"
+    >
+      <div v-for="dictamen in dictamenesSeleccionados" :key="dictamen.id" class="break-after-page">
+        <DocumentoDictamen :dictamen="dictamen" />
+      </div>
     </VistaPreviaDocumento>
   </div>
 </template>
@@ -232,6 +283,7 @@ import { useToast } from '@/composables/useToast'
 import { formatFecha, formatMoneda } from '@/utils/formato'
 import DocumentoDictamen from '@/components/documentos/DocumentoDictamen.vue'
 import VistaPreviaDocumento from '@/components/documentos/VistaPreviaDocumento.vue'
+import CancelarMantenimientoModal from '@/components/mantenimiento/CancelarMantenimientoModal.vue'
 import ConcluirMantenimientoModal from '@/components/mantenimiento/ConcluirMantenimientoModal.vue'
 import FiltrosMantenimientoModal from '@/components/mantenimiento/FiltrosMantenimientoModal.vue'
 import ProgramarMantenimientoModal from '@/components/mantenimiento/ProgramarMantenimientoModal.vue'
@@ -245,7 +297,8 @@ import SearchInput from '@/components/ui/SearchInput.vue'
 import TablePagination from '@/components/ui/TablePagination.vue'
 
 const { bienes } = useBienesData()
-const { mantenimientos, mantenimientosVisibles, dictamenesVisibles, iniciarMantenimiento, concluirMantenimiento, generarDictamenDirecto } = useMantenimientosData()
+const { mantenimientos, mantenimientosVisibles, dictamenesVisibles, iniciarMantenimiento, concluirMantenimiento, cancelarMantenimiento, generarDictamenDirecto } =
+  useMantenimientosData()
 const toast = useToast()
 
 type Pestana = 'Todas' | TipoMantenimiento | 'Dictámenes'
@@ -312,7 +365,7 @@ const CAUSA_ESTILOS: Record<CausaBaja, string> = {
 }
 
 
-const busqueda = ref('')
+const busqueda = ref(typeof route.query.buscar === 'string' ? route.query.buscar : '')
 const pageSize = ref(10)
 
 const mostrarModalFiltros = ref(false)
@@ -434,6 +487,36 @@ function imprimirDictamen(dictamen: Dictamen) {
   mostrarVistaPrevia.value = true
 }
 
+// --- Selección múltiple e impresión en lote de dictámenes ---
+const seleccionadosDictamenes = ref<Set<string>>(new Set())
+
+function alternarSeleccionDictamen(dictamenId: string) {
+  const siguiente = new Set(seleccionadosDictamenes.value)
+  if (!siguiente.delete(dictamenId)) siguiente.add(dictamenId)
+  seleccionadosDictamenes.value = siguiente
+}
+
+const todaLaPaginaDeDictamenesSeleccionada = computed(
+  () => dictamenesPagina.value.length > 0 && dictamenesPagina.value.every((dictamen) => seleccionadosDictamenes.value.has(dictamen.id)),
+)
+const algoDeLaPaginaDeDictamenesSeleccionado = computed(() => dictamenesPagina.value.some((dictamen) => seleccionadosDictamenes.value.has(dictamen.id)))
+
+function alternarPaginaDictamenes() {
+  const siguiente = new Set(seleccionadosDictamenes.value)
+  for (const dictamen of dictamenesPagina.value) {
+    if (todaLaPaginaDeDictamenesSeleccionada.value) siguiente.delete(dictamen.id)
+    else siguiente.add(dictamen.id)
+  }
+  seleccionadosDictamenes.value = siguiente
+}
+
+function limpiarSeleccionDictamenes() {
+  seleccionadosDictamenes.value = new Set()
+}
+
+const dictamenesSeleccionados = computed(() => dictamenesVisibles().filter((dictamen) => seleccionadosDictamenes.value.has(dictamen.id)))
+const mostrarImpresionLoteDictamenes = ref(false)
+
 const mostrarModalProgramar = ref(false)
 
 // El botón "Agregar mantenimiento" arranca en el tipo de la pestaña activa; el usuario puede cambiarlo dentro del modal.
@@ -485,5 +568,25 @@ function onConfirmarConclusion(datos: Parameters<typeof concluirMantenimiento>[1
   } else {
     toast.success(`Mantenimiento concluido: ${registro.folio}`)
   }
+}
+
+const mostrarModalCancelar = ref(false)
+const mantenimientoCancelar = ref<Mantenimiento | null>(null)
+
+function abrirCancelacion(registro: Mantenimiento) {
+  mantenimientoCancelar.value = registro
+  mostrarModalCancelar.value = true
+}
+
+function onConfirmarCancelacion(motivo: string) {
+  const registro = mantenimientoCancelar.value
+  if (!registro) return
+
+  const resultado = cancelarMantenimiento(registro.id, motivo)
+  if (!resultado.ok) {
+    toast.error(resultado.motivo ?? 'No se pudo cancelar el mantenimiento.')
+    return
+  }
+  toast.success(`${registro.folio}: cancelado`)
 }
 </script>

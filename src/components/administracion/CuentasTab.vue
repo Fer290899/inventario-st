@@ -51,7 +51,7 @@
                   :label="etiquetaEstatus(cuenta)"
                   :tone="cuenta.activo ? 'amber' : 'emerald'"
                   :disabled="cuenta.activo && esPropia(cuenta.id)"
-                  @click="alternar(cuenta)"
+                  @click="onAlternarClick(cuenta)"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" :d="cuenta.activo ? ICONO_INACTIVAR : ICONO_REACTIVAR" />
@@ -81,6 +81,16 @@
 
     <CuentaModal v-model:open="mostrarModalCuenta" :cuenta="cuentaEditando" @guardar="onGuardarCuenta" />
     <RestablecerPasswordModal v-model:open="mostrarModalPassword" :cuenta="cuentaPassword" @guardar="onRestablecer" />
+    <ConfirmModal
+      v-model:open="mostrarReactivar"
+      title="Reactivar cuenta"
+      :message="`¿Reactivar la cuenta «${porReactivar?.username ?? ''}»?`"
+      confirm-label="Reactivar"
+      confirm-variant="primary"
+      pedir-motivo
+      motivo-label="Motivo de la reactivación (opcional)"
+      @confirmar="confirmarReactivar"
+    />
   </div>
 </template>
 
@@ -92,6 +102,7 @@ import { useCuentasData, type CuentaPublica } from '@/composables/useCuentasData
 import { usePaginacion } from '@/composables/usePaginacion'
 import { useToast } from '@/composables/useToast'
 import { formatFechaHora, normalizarTexto } from '@/utils/formato'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import IconButton from '@/components/ui/IconButton.vue'
 import PageSizeSelect from '@/components/ui/PageSizeSelect.vue'
@@ -186,16 +197,35 @@ function onRestablecer(password: string) {
 
 // --- Inactivar / reactivar ---
 function alternar(cuenta: CuentaPublica) {
-  const estabaActiva = cuenta.activo
   const resultado = alternarEstatus(cuenta.id)
   if (!resultado.ok) {
     toast.error(resultado.motivo ?? 'No se pudo cambiar el estatus.')
     return
   }
-  if (!estabaActiva) {
-    toast.success(`${cuenta.username}: reactivada`)
+  toast.success(`${cuenta.username}: inactivada`, { etiqueta: 'Deshacer', ejecutar: () => alternarEstatus(cuenta.id) })
+}
+
+/** Inactivar sigue siendo instantáneo (con «Deshacer»); reactivar pasa por un modal que permite anotar un motivo. */
+function onAlternarClick(cuenta: CuentaPublica) {
+  if (cuenta.activo) {
+    alternar(cuenta)
     return
   }
-  toast.success(`${cuenta.username}: inactivada`, { etiqueta: 'Deshacer', ejecutar: () => alternarEstatus(cuenta.id) })
+  porReactivar.value = cuenta
+  mostrarReactivar.value = true
+}
+
+const mostrarReactivar = ref(false)
+const porReactivar = ref<CuentaPublica | null>(null)
+
+function confirmarReactivar(motivo?: string) {
+  const pendiente = porReactivar.value
+  if (!pendiente) return
+  const resultado = alternarEstatus(pendiente.id, motivo)
+  if (!resultado.ok) {
+    toast.error(resultado.motivo ?? 'No se pudo reactivar.')
+    return
+  }
+  toast.success(`${pendiente.username}: reactivada`)
 }
 </script>

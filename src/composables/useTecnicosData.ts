@@ -129,7 +129,7 @@ export function useTecnicosData() {
     return { ok: true }
   }
 
-  function alternarActivo(id: string): ResultadoTecnico {
+  function alternarActivo(id: string, motivo?: string): ResultadoTecnico {
     const tecnico = tecnicos.find((item) => item.id === id)
     if (!tecnico) return { ok: false, motivo: 'No se encontró al técnico.' }
 
@@ -145,7 +145,8 @@ export function useTecnicosData() {
 
     // TODO: reemplazar por la llamada real, ej. await tecnicosApi.cambiarEstatus(id)
     tecnico.activo = !tecnico.activo
-    registrarAuditoria('Catálogos', tecnico.activo ? 'Reactivar' : 'Inactivar', 'Técnico', tecnico.nombre)
+    const detalle = tecnico.activo && motivo ? `${tecnico.nombre} · ${motivo}` : tecnico.nombre
+    registrarAuditoria('Catálogos', tecnico.activo ? 'Reactivar' : 'Inactivar', 'Técnico', detalle)
 
     // Quien ya no es técnico activo tampoco debe poder entrar; reactivarlo no reactiva la cuenta sola.
     const cuenta = cuentaDe(id)

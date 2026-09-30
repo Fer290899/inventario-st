@@ -38,6 +38,8 @@ export interface Bien {
   departamento?: string
   /** Custodia vigente: persona que tiene el bien. Solo existe si `estatus === 'Asignado'`. */
   responsable?: string
+  /** Foto del bien como data URL; opcional. No se audita en bitácora (es demasiado pesada para un diff de texto). */
+  foto?: string
 }
 
 /** Copia fija de los datos del bien al emitir un documento (hoja, dictamen): editar el bien después no la altera. */

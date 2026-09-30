@@ -119,6 +119,11 @@
           </p>
         </fieldset>
 
+        <!-- Foto -->
+        <div class="sm:col-span-2 lg:col-span-3">
+          <CampoFoto v-model="form.foto" id="bien-foto" />
+        </div>
+
         <!-- Observaciones -->
         <div class="sm:col-span-2 lg:col-span-3">
           <label class="mb-1.5 block text-sm font-medium text-slate-700">Observaciones</label>
@@ -146,6 +151,7 @@ import { ORIGEN_OPCIONES, useBienesData } from '@/composables/useBienesData'
 import { useCatalogosData } from '@/composables/useCatalogosData'
 import { useTiposBienData } from '@/composables/useTiposBienData'
 import { resumirCaracteristicas, type ValorCaracteristica } from '@/utils/caracteristicas'
+import CampoFoto from '@/components/bienes/CampoFoto.vue'
 import CaracteristicaInput from '@/components/bienes/CaracteristicaInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -199,6 +205,7 @@ function formDesde(bien?: Bien | null) {
     ubicacion: bien.ubicacion ?? '',
     direccion: bien.direccion ?? '',
     departamento: bien.departamento ?? '',
+    foto: bien.foto,
   }
 }
 
@@ -222,6 +229,7 @@ function formVacio() {
     ubicacion: '',
     direccion: '',
     departamento: '',
+    foto: undefined as string | undefined,
   }
 }
 
@@ -304,6 +312,7 @@ function guardar() {
     ubicacion: form.ubicacion || undefined,
     direccion: form.direccion || undefined,
     departamento: form.departamento || undefined,
+    foto: form.foto,
   })
   cerrar()
 }

@@ -122,6 +122,18 @@
           <button
             v-if="!collapsed"
             type="button"
+            title="Cambiar mi contraseña"
+            class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
+            data-doc="abrir-cambiar-password"
+            @click="mostrarCambiarPassword = true"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+            </svg>
+          </button>
+          <button
+            v-if="!collapsed"
+            type="button"
             title="Cerrar sesión"
             class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
             @click="handleLogout"
@@ -152,6 +164,9 @@
         </div>
 
         <div class="flex items-center gap-2 sm:gap-4">
+          <!-- Buscador global -->
+          <BuscadorGlobal />
+
           <!-- Alertas -->
           <AlertasMenu />
 
@@ -174,6 +189,8 @@
         </div>
       </main>
     </div>
+
+    <CambiarPasswordModal v-model:open="mostrarCambiarPassword" @guardar="onCambiarPassword" />
   </div>
 </template>
 
@@ -181,7 +198,11 @@
 import { computed, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import AlertasMenu from '@/components/layout/AlertasMenu.vue'
+import BuscadorGlobal from '@/components/layout/BuscadorGlobal.vue'
+import CambiarPasswordModal from '@/components/layout/CambiarPasswordModal.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useCuentasData } from '@/composables/useCuentasData'
+import { useToast } from '@/composables/useToast'
 import type { Permiso } from '@/config/permisos'
 
 interface NavChild {
@@ -210,10 +231,13 @@ type NavItem = NavLink | NavGroup
 const route = useRoute()
 const router = useRouter()
 const { usuario, can, cerrarSesion } = useAuth()
+const { cambiarPasswordPropia } = useCuentasData()
+const toast = useToast()
 
 const collapsed = ref(false)
 const mobileOpen = ref(false)
 const openGroups = ref<Set<string>>(new Set())
+const mostrarCambiarPassword = ref(false)
 
 const navItems: NavItem[] = [
   {
@@ -297,6 +321,15 @@ function toggleGroup(label: string) {
 function handleLogout() {
   cerrarSesion()
   router.push('/login')
+}
+
+function onCambiarPassword(actual: string, nueva: string) {
+  const resultado = cambiarPasswordPropia(actual, nueva)
+  if (!resultado.ok) {
+    toast.error(resultado.motivo ?? 'No se pudo cambiar la contraseña.')
+    return
+  }
+  toast.success('Contraseña actualizada.')
 }
 
 // Abre automáticamente el grupo de la ruta activa y cierra el drawer móvil al navegar

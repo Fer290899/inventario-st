@@ -21,7 +21,10 @@
             <AppButton variant="secondary" size="sm" @click="etiquetaAbierta = true">Imprimir etiqueta</AppButton>
           </div>
         </div>
-        <QrCode :valor="enlace" :tamano="96" class="shrink-0 self-start rounded-lg border border-slate-200 p-2" />
+        <div class="flex shrink-0 gap-3 self-start">
+          <img v-if="bien.foto" :src="bien.foto" alt="Foto del bien" class="h-24 w-24 rounded-lg border border-slate-200 object-cover" />
+          <QrCode :valor="enlace" :tamano="96" class="rounded-lg border border-slate-200 p-2" />
+        </div>
       </div>
 
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">

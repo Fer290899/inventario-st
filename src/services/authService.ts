@@ -129,4 +129,9 @@ export const authService = {
     const cuenta = CUENTAS.find((item) => item.id === id)
     if (cuenta) cuenta.password = password
   },
+
+  verificarPassword(id: string, password: string): boolean {
+    const cuenta = CUENTAS.find((item) => item.id === id)
+    return cuenta?.password === password
+  },
 }

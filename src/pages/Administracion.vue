@@ -70,7 +70,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" :d="ICONO_EDITAR" />
                       </svg>
                     </IconButton>
-                    <IconButton :label="elemento.activo ? 'Inactivar' : 'Reactivar'" :tone="elemento.activo ? 'amber' : 'emerald'" @click="alternar(catalogo, elemento.id, elemento.nombre)">
+                    <IconButton :label="elemento.activo ? 'Inactivar' : 'Reactivar'" :tone="elemento.activo ? 'amber' : 'emerald'" @click="onAlternarClick(catalogo, elemento.id, elemento.nombre)">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" :d="elemento.activo ? ICONO_INACTIVAR : ICONO_REACTIVAR" />
                       </svg>
@@ -146,7 +146,7 @@
                       :label="etiquetaInactivarUsuario(usuario)"
                       :tone="usuario.activo ? 'amber' : 'emerald'"
                       :disabled="usuario.activo && bienesEn('usuario', usuario.nombre) > 0"
-                      @click="alternar('usuario', usuario.id, usuario.nombre)"
+                      @click="onAlternarClick('usuario', usuario.id, usuario.nombre)"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" :d="usuario.activo ? ICONO_INACTIVAR : ICONO_REACTIVAR" />
@@ -196,6 +196,16 @@
       :message="`¿Eliminar «${porEliminar?.nombre ?? ''}»? Esta acción no se puede deshacer.`"
       confirm-label="Eliminar"
       @confirmar="confirmarEliminar"
+    />
+    <ConfirmModal
+      v-model:open="mostrarReactivar"
+      title="Reactivar"
+      :message="`¿Reactivar «${porReactivar?.nombre ?? ''}»?`"
+      confirm-label="Reactivar"
+      confirm-variant="primary"
+      pedir-motivo
+      motivo-label="Motivo de la reactivación (opcional)"
+      @confirmar="confirmarReactivar"
     />
   </div>
 </template>
@@ -262,7 +272,7 @@ const route = useRoute()
 const tabActivo = computed<Seccion>(() => seccionDesdeConsulta(route.query.seccion))
 // Catálogo vigente; en las secciones que no son un catálogo no se usa.
 const catalogo = computed<Catalogo>(() => (esCatalogo(tabActivo.value) ? tabActivo.value : 'ubicacion'))
-const busqueda = ref('')
+const busqueda = ref(typeof route.query.buscar === 'string' ? route.query.buscar : '')
 const pageSize = ref(10)
 
 const conteos = computed<Partial<Record<Seccion, number>>>(() => ({
@@ -401,16 +411,37 @@ function alternar(catalogo: Catalogo, id: string, nombre: string) {
     toast.error(resultado.motivo ?? 'No se pudo cambiar el estatus.')
     return
   }
-  if (estaActivo(catalogo, id)) {
-    toast.success(`${nombre}: reactivado`)
-    return
-  }
   toast.success(`${nombre}: inactivado`, { etiqueta: 'Deshacer', ejecutar: () => alternarActivo(catalogo, id) })
 }
 
 function estaActivo(catalogo: Catalogo, id: string): boolean {
   const lista = catalogo === 'ubicacion' ? ubicaciones : catalogo === 'direccion' ? direcciones : catalogo === 'departamento' ? departamentos : usuarios
   return lista.find((item) => item.id === id)?.activo ?? false
+}
+
+/** Inactivar sigue siendo instantáneo (con «Deshacer»); reactivar pasa por un modal que permite anotar un motivo. */
+function onAlternarClick(catalogo: Catalogo, id: string, nombre: string) {
+  if (estaActivo(catalogo, id)) {
+    alternar(catalogo, id, nombre)
+    return
+  }
+  porReactivar.value = { catalogo, id, nombre }
+  mostrarReactivar.value = true
+}
+
+const mostrarReactivar = ref(false)
+const porReactivar = ref<{ catalogo: Catalogo; id: string; nombre: string } | null>(null)
+
+function confirmarReactivar(motivo?: string) {
+  const pendiente = porReactivar.value
+  if (!pendiente) return
+
+  const resultado = alternarActivo(pendiente.catalogo, pendiente.id, motivo)
+  if (!resultado.ok) {
+    toast.error(resultado.motivo ?? 'No se pudo reactivar.')
+    return
+  }
+  toast.success(`${pendiente.nombre}: reactivado`)
 }
 
 function etiquetaInactivarUsuario(usuario: Usuario): string {

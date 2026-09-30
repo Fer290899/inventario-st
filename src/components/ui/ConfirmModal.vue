@@ -8,34 +8,55 @@
 
     <p class="text-sm text-slate-600">{{ message }}</p>
 
+    <div v-if="pedirMotivo" class="mt-4">
+      <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="confirm-motivo">{{ motivoLabel }}</label>
+      <textarea
+        id="confirm-motivo"
+        v-model="motivo"
+        rows="2"
+        class="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-400/60 focus:bg-white focus:ring-2 focus:ring-blue-500/30"
+      ></textarea>
+    </div>
+
     <template #footer>
       <AppButton variant="secondary" @click="open = false">Cancelar</AppButton>
-      <AppButton variant="danger" @click="confirmar">{{ confirmLabel }}</AppButton>
+      <AppButton :variant="confirmVariant" @click="confirmar">{{ confirmLabel }}</AppButton>
     </template>
   </BaseModal>
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     title: string
     message: string
     confirmLabel?: string
+    confirmVariant?: 'danger' | 'primary'
+    /** Muestra un textarea de motivo opcional junto al mensaje */
+    pedirMotivo?: boolean
+    motivoLabel?: string
   }>(),
-  { confirmLabel: 'Confirmar' },
+  { confirmLabel: 'Confirmar', confirmVariant: 'danger', pedirMotivo: false, motivoLabel: 'Motivo (opcional)' },
 )
 
 const open = defineModel<boolean>('open', { required: true })
 
 const emit = defineEmits<{
-  confirmar: []
+  confirmar: [motivo?: string]
 }>()
 
+const motivo = ref('')
+
+watch(open, (abierto) => {
+  if (abierto) motivo.value = ''
+})
+
 function confirmar() {
-  emit('confirmar')
+  emit('confirmar', props.pedirMotivo ? motivo.value.trim() || undefined : undefined)
   open.value = false
 }
 </script>

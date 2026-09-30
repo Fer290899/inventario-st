@@ -23,12 +23,16 @@ export interface Alerta {
   /** Id del mantenimiento (o del bien, en garantías) al que apunta el filtro */
   entidadId: string
   destino: { path: string; query: Record<string, string> }
+  departamento?: string
+  responsable?: string
 }
 
 export interface UmbralesAlertas {
   diasAvisoPreventivo: number
   diasAvisoGarantia: number
   diasCorrectivoAtorado: number
+  /** Tipos de alerta que no se muestran, aunque se cumpla su condición. */
+  silenciados: FocoAlerta[]
 }
 
 export const FOCO_ETIQUETAS: Record<FocoVista, string> = {
@@ -67,12 +71,19 @@ const umbrales = reactive<UmbralesAlertas>({
   diasAvisoPreventivo: 15,
   diasAvisoGarantia: 60,
   diasCorrectivoAtorado: 30,
+  silenciados: [],
 })
 
 function actualizarUmbrales(datos: UmbralesAlertas) {
   // TODO: reemplazar por la llamada real al servicio de configuración
   Object.assign(umbrales, datos)
-  registrarAuditoria('Configuración', 'Umbrales de alertas', 'Alertas', `Preventivo ${datos.diasAvisoPreventivo} d · Garantía ${datos.diasAvisoGarantia} d · Correctivo ${datos.diasCorrectivoAtorado} d`)
+  const silenciadosTexto = datos.silenciados.length > 0 ? ` · Silenciadas: ${datos.silenciados.map((foco) => FOCO_ETIQUETAS[foco]).join(', ')}` : ''
+  registrarAuditoria(
+    'Configuración',
+    'Umbrales de alertas',
+    'Alertas',
+    `Preventivo ${datos.diasAvisoPreventivo} d · Garantía ${datos.diasAvisoGarantia} d · Correctivo ${datos.diasCorrectivoAtorado} d${silenciadosTexto}`,
+  )
 }
 
 const { bienes } = useBienesData()
@@ -129,6 +140,8 @@ function alertasPreventivas(hoy: string, porId: Map<string, Bien>): Alerta[] {
       bienId,
       entidadId: referencia.id,
       destino: { path: '/dashboard/mantenimiento', query: { tab: 'Preventivo', foco: vencido ? 'preventivo-vencido' : 'preventivo-proximo' } },
+      departamento: bien.departamento,
+      responsable: bien.responsable,
     })
   }
   return alertas
@@ -153,6 +166,8 @@ function alertasCorrectivas(hoy: string, porId: Map<string, Bien>): Alerta[] {
       bienId: item.bienId,
       entidadId: item.id,
       destino: { path: '/dashboard/mantenimiento', query: { tab: 'Correctivo', foco: 'correctivo-atorado' } },
+      departamento: bien?.departamento,
+      responsable: bien?.responsable,
     })
   }
   return alertas
@@ -176,6 +191,8 @@ function alertasGarantia(hoy: string): Alerta[] {
       bienId: bien.id,
       entidadId: bien.id,
       destino: { path: '/dashboard/bienes', query: { foco: 'garantia-por-vencer' } },
+      departamento: bien.departamento,
+      responsable: bien.responsable,
     })
   }
   return alertas
@@ -184,10 +201,12 @@ function alertasGarantia(hoy: string): Alerta[] {
 const alertas = computed<Alerta[]>(() => {
   const hoy = hoyIso()
   const porId = new Map(bienes.map((bien) => [bien.id, bien]))
-  return [...alertasPreventivas(hoy, porId), ...alertasCorrectivas(hoy, porId), ...alertasGarantia(hoy)].sort((a, b) => {
-    if (a.severidad !== b.severidad) return a.severidad === 'critica' ? -1 : 1
-    return a.fechaLimite.localeCompare(b.fechaLimite)
-  })
+  return [...alertasPreventivas(hoy, porId), ...alertasCorrectivas(hoy, porId), ...alertasGarantia(hoy)]
+    .filter((alerta) => !umbrales.silenciados.includes(alerta.foco))
+    .sort((a, b) => {
+      if (a.severidad !== b.severidad) return a.severidad === 'critica' ? -1 : 1
+      return a.fechaLimite.localeCompare(b.fechaLimite)
+    })
 })
 
 const resumen = computed(() => {

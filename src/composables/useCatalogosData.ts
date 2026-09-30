@@ -214,7 +214,7 @@ export function useCatalogosData() {
     }
   }
 
-  function alternarActivo(catalogo: Catalogo, id: string): ResultadoAccion {
+  function alternarActivo(catalogo: Catalogo, id: string, motivo?: string): ResultadoAccion {
     // TODO: reemplazar por la llamada real, ej. await catalogosApi.cambiarEstatus(catalogo, id)
     const elemento = listaDe(catalogo).find((item) => item.id === id)
     if (!elemento) return { ok: false, motivo: 'No se encontró el elemento.' }
@@ -230,7 +230,8 @@ export function useCatalogosData() {
     }
 
     elemento.activo = !elemento.activo
-    registrarAuditoria('Catálogos', elemento.activo ? 'Reactivar' : 'Inactivar', ETIQUETA_CATALOGO[catalogo], elemento.nombre)
+    const detalle = elemento.activo && motivo ? `${elemento.nombre} · ${motivo}` : elemento.nombre
+    registrarAuditoria('Catálogos', elemento.activo ? 'Reactivar' : 'Inactivar', ETIQUETA_CATALOGO[catalogo], detalle)
     return { ok: true }
   }
 

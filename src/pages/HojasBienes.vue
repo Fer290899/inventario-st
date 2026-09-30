@@ -67,11 +67,32 @@
         </div>
       </div>
 
+      <!-- Barra de acciones sobre la selección -->
+      <div v-if="hojasSeleccionadas.length > 0" class="flex flex-wrap items-center gap-2 border-b border-blue-100 bg-blue-50/60 px-4 py-2.5">
+        <span class="mr-2 text-sm font-medium tabular-nums text-blue-800">
+          {{ hojasSeleccionadas.length }} {{ hojasSeleccionadas.length === 1 ? 'hoja seleccionada' : 'hojas seleccionadas' }}
+        </span>
+        <AppButton size="sm" data-doc="imprimir-seleccion" @click="mostrarImpresionLote = true">Imprimir seleccionadas</AppButton>
+        <AppButton variant="ghost" size="sm" class="ml-auto" @click="limpiarSeleccion">Limpiar selección</AppButton>
+      </div>
+
       <!-- Tabla -->
       <div class="max-h-[600px] overflow-auto">
         <table class="w-full text-left text-sm">
           <thead class="sticky top-0 z-10 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 shadow-[0_1px_0_0] shadow-slate-200">
             <tr>
+              <th class="w-10 px-4 py-3">
+                <input
+                  type="checkbox"
+                  aria-label="Seleccionar las hojas de esta página"
+                  title="Seleccionar las hojas de esta página"
+                  class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/40 disabled:cursor-not-allowed disabled:opacity-40"
+                  :checked="todaLaPaginaSeleccionada"
+                  :indeterminate="algoDeLaPaginaSeleccionado && !todaLaPaginaSeleccionada"
+                  :disabled="hojasPagina.length === 0"
+                  @change="alternarPagina"
+                />
+              </th>
               <th class="whitespace-nowrap px-4 py-3">Tipo</th>
               <th class="whitespace-nowrap px-4 py-3">Folio</th>
               <th class="whitespace-nowrap px-4 py-3">Movimiento</th>
@@ -86,7 +107,16 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            <tr v-for="hoja in hojasPagina" :key="hoja.id" class="transition hover:bg-slate-50">
+            <tr v-for="hoja in hojasPagina" :key="hoja.id" class="transition hover:bg-slate-50" :class="{ 'bg-blue-50/40': seleccionados.has(hoja.id) }">
+              <td class="px-4 py-2.5">
+                <input
+                  type="checkbox"
+                  :aria-label="`Seleccionar hoja ${hoja.folio}`"
+                  class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/40"
+                  :checked="seleccionados.has(hoja.id)"
+                  @change="alternarSeleccion(hoja.id)"
+                />
+              </td>
               <td class="whitespace-nowrap px-4 py-2.5">
                 <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="TIPO_HOJA_ESTILOS[hoja.tipo]">
                   {{ hoja.tipo }}
@@ -123,7 +153,7 @@
             </tr>
 
             <tr v-if="hojasPagina.length === 0">
-              <td colspan="11">
+              <td colspan="12">
                 <EmptyState mensaje="No se encontraron hojas que coincidan con la búsqueda o los filtros." />
               </td>
             </tr>
@@ -154,6 +184,16 @@
       :subtitle="hojaImpresion?.persona"
     >
       <DocumentoHoja v-if="hojaImpresion" :hoja="hojaImpresion" />
+    </VistaPreviaDocumento>
+
+    <VistaPreviaDocumento
+      v-model:open="mostrarImpresionLote"
+      title="Hojas seleccionadas"
+      :subtitle="`${hojasSeleccionadas.length} ${hojasSeleccionadas.length === 1 ? 'hoja' : 'hojas'}`"
+    >
+      <div v-for="hoja in hojasSeleccionadas" :key="hoja.id" class="break-after-page">
+        <DocumentoHoja :hoja="hoja" />
+      </div>
     </VistaPreviaDocumento>
   </div>
 </template>
@@ -288,6 +328,34 @@ function imprimirHoja(hoja: Hoja) {
   hojaImpresion.value = hoja
   mostrarVistaPrevia.value = true
 }
+
+// --- Selección múltiple e impresión en lote ---
+const seleccionados = ref<Set<string>>(new Set())
+
+function alternarSeleccion(hojaId: string) {
+  const siguiente = new Set(seleccionados.value)
+  if (!siguiente.delete(hojaId)) siguiente.add(hojaId)
+  seleccionados.value = siguiente
+}
+
+const todaLaPaginaSeleccionada = computed(() => hojasPagina.value.length > 0 && hojasPagina.value.every((hoja) => seleccionados.value.has(hoja.id)))
+const algoDeLaPaginaSeleccionado = computed(() => hojasPagina.value.some((hoja) => seleccionados.value.has(hoja.id)))
+
+function alternarPagina() {
+  const siguiente = new Set(seleccionados.value)
+  for (const hoja of hojasPagina.value) {
+    if (todaLaPaginaSeleccionada.value) siguiente.delete(hoja.id)
+    else siguiente.add(hoja.id)
+  }
+  seleccionados.value = siguiente
+}
+
+function limpiarSeleccion() {
+  seleccionados.value = new Set()
+}
+
+const hojasSeleccionadas = computed(() => hojas.filter((hoja) => seleccionados.value.has(hoja.id)))
+const mostrarImpresionLote = ref(false)
 
 // Menú desplegable "Exportar a Excel" — se cierra al hacer clic fuera de él.
 const mostrarMenuExportar = ref(false)

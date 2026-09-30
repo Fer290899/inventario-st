@@ -65,14 +65,15 @@ export function useCuentasData() {
     return { ok: true }
   }
 
-  function alternarEstatus(id: string): ResultadoAccion {
+  function alternarEstatus(id: string, motivo?: string): ResultadoAccion {
     const cuenta = cuentas.value.find((item) => item.id === id)
     if (!cuenta) return { ok: false, motivo: 'No se encontró la cuenta.' }
     if (cuenta.activo && esPropia(id)) return { ok: false, motivo: 'No puedes inactivar tu propia cuenta.' }
 
     // TODO: reemplazar por la llamada real, ej. await cuentasApi.cambiarEstatus(id)
     authService.alternarEstatus(id)
-    registrarAuditoria('Cuentas', cuenta.activo ? 'Inactivar' : 'Reactivar', 'Cuenta', cuenta.username)
+    const detalle = !cuenta.activo && motivo ? `${cuenta.username} · ${motivo}` : cuenta.username
+    registrarAuditoria('Cuentas', cuenta.activo ? 'Inactivar' : 'Reactivar', 'Cuenta', detalle)
     return { ok: true }
   }
 
@@ -89,6 +90,21 @@ export function useCuentasData() {
     return { ok: true }
   }
 
+  /** Autoservicio: quien tiene la sesión abierta cambia su propia contraseña, verificando la actual. */
+  function cambiarPasswordPropia(actual: string, nueva: string): ResultadoAccion {
+    const propio = usuarioActual()
+    if (!propio) return { ok: false, motivo: 'No hay sesión activa.' }
+    if (!authService.verificarPassword(propio.id, actual)) return { ok: false, motivo: 'La contraseña actual no es correcta.' }
+    const errorClave = errorPassword(nueva)
+    if (errorClave) return { ok: false, motivo: errorClave }
+
+    // TODO: reemplazar por la llamada real, ej. await cuentasApi.cambiarPasswordPropia(actual, nueva)
+    authService.restablecerPassword(propio.id, nueva)
+    // La contraseña nunca se registra.
+    registrarAuditoria('Cuentas', 'Cambiar contraseña', 'Cuenta', propio.username)
+    return { ok: true }
+  }
+
   /** Usuario libre a partir de un nombre: «Ricardo Peña Osorio» → «ricardo.pena». */
   function sugerirUsername(nombre: string): string {
     const palabras = normalizarTexto(nombre).split(/\s+/).map((palabra) => palabra.replace(/[^a-z0-9]/g, '')).filter(Boolean)
@@ -102,5 +118,5 @@ export function useCuentasData() {
     return base
   }
 
-  return { cuentas, esPropia, errorUsername, sugerirUsername, crear, actualizar, alternarEstatus, restablecerPassword }
+  return { cuentas, esPropia, errorUsername, sugerirUsername, crear, actualizar, alternarEstatus, restablecerPassword, cambiarPasswordPropia }
 }

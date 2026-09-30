@@ -68,7 +68,7 @@
                   :label="etiquetaEstatus(tecnico)"
                   :tone="tecnico.activo ? 'amber' : 'emerald'"
                   :disabled="tecnico.activo && abiertosDe(tecnico.id) > 0"
-                  @click="alternar(tecnico)"
+                  @click="onAlternarClick(tecnico)"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" :d="tecnico.activo ? ICONO_INACTIVAR : ICONO_REACTIVAR" />
@@ -109,6 +109,16 @@
       :message="`¿Eliminar a «${porEliminar?.nombre ?? ''}»? Esta acción no se puede deshacer.`"
       confirm-label="Eliminar"
       @confirmar="confirmarEliminar"
+    />
+    <ConfirmModal
+      v-model:open="mostrarReactivar"
+      title="Reactivar técnico"
+      :message="`¿Reactivar a «${porReactivar?.nombre ?? ''}»?`"
+      confirm-label="Reactivar"
+      confirm-variant="primary"
+      pedir-motivo
+      motivo-label="Motivo de la reactivación (opcional)"
+      @confirmar="confirmarReactivar"
     />
   </div>
 </template>
@@ -222,21 +232,39 @@ function verCuenta(username: string) {
 
 // --- Inactivar / reactivar ---
 function alternar(tecnico: Tecnico) {
-  // Es el objeto vivo del catálogo: se lee antes de cambiarlo.
-  const estabaActivo = tecnico.activo
   const resultado = alternarActivo(tecnico.id)
   if (!resultado.ok) {
     toast.error(resultado.motivo ?? 'No se pudo cambiar el estatus.')
-    return
-  }
-  if (!estabaActivo) {
-    toast.success(`${tecnico.nombre}: reactivado`)
     return
   }
   toast.success(`${tecnico.nombre}: inactivado${resultado.cuentaInactivada ? '. También se inactivó su cuenta de acceso.' : ''}`, {
     etiqueta: 'Deshacer',
     ejecutar: () => alternarActivo(tecnico.id),
   })
+}
+
+/** Inactivar sigue siendo instantáneo (con «Deshacer»); reactivar pasa por un modal que permite anotar un motivo. */
+function onAlternarClick(tecnico: Tecnico) {
+  if (tecnico.activo) {
+    alternar(tecnico)
+    return
+  }
+  porReactivar.value = tecnico
+  mostrarReactivar.value = true
+}
+
+const mostrarReactivar = ref(false)
+const porReactivar = ref<Tecnico | null>(null)
+
+function confirmarReactivar(motivo?: string) {
+  const pendiente = porReactivar.value
+  if (!pendiente) return
+  const resultado = alternarActivo(pendiente.id, motivo)
+  if (!resultado.ok) {
+    toast.error(resultado.motivo ?? 'No se pudo reactivar.')
+    return
+  }
+  toast.success(`${pendiente.nombre}: reactivado`)
 }
 
 // --- Eliminar ---

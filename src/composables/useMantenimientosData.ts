@@ -3,6 +3,7 @@ import { hoyIso, sumarDiasIso, sumarMesesIso } from '@/utils/formato'
 import { registrarAuditoria } from './useAuditoria'
 import { nombreActual, usuarioActual } from './useAuth'
 import { ASIGNABLES_SEMILLA } from './tecnicosSemilla'
+import type { ResultadoAccion } from './useCatalogosData'
 import { snapshotDe, useBienesData, type Bien, type BienSnapshot, type EstatusBien } from './useBienesData'
 
 export type TipoMantenimiento = 'Preventivo' | 'Correctivo'
@@ -46,6 +47,8 @@ export interface Mantenimiento {
   resultado?: ResultadoCorrectivo
   /** Estatus del bien justo antes de iniciar el correctivo, para restaurarlo si el resultado es "Reparado". */
   estatusPrevioBien?: EstatusBien
+  /** Solo si estatus === 'Cancelado' */
+  motivoCancelacion?: string
   registradoPor: string
 }
 
@@ -304,6 +307,33 @@ function concluirMantenimiento(id: string, datos: DatosConclusion): Dictamen | n
 }
 
 /**
+ * Cancela un mantenimiento programado o en curso. Si es Correctivo, libera el bien al estatus que tenía
+ * antes de programarlo (igual que "Reparado" al concluir), ya que quedó marcado "En reparación".
+ */
+function cancelarMantenimiento(id: string, motivo: string): ResultadoAccion {
+  // TODO: reemplazar por la llamada real al servicio de mantenimientos,
+  // ej. await mantenimientosApi.cancelar(id, motivo)
+  const mantenimiento = mantenimientos.find((item) => item.id === id)
+  if (!mantenimiento) return { ok: false, motivo: 'No se encontró el mantenimiento.' }
+  if (mantenimiento.estatus !== 'Programado' && mantenimiento.estatus !== 'En curso') {
+    return { ok: false, motivo: 'Solo se puede cancelar un mantenimiento programado o en curso.' }
+  }
+  if (!esVisibleParaSesion(mantenimiento)) return { ok: false, motivo: 'No puedes cancelar un mantenimiento que no es tuyo.' }
+
+  mantenimiento.estatus = 'Cancelado'
+  mantenimiento.motivoCancelacion = motivo.trim()
+
+  if (mantenimiento.tipo === 'Correctivo') {
+    const { bienes } = useBienesData()
+    const bien = bienes.find((item) => item.id === mantenimiento.bienId)
+    if (bien) bien.estatus = mantenimiento.estatusPrevioBien ?? 'Por asignar'
+  }
+
+  auditar('Cancelar', mantenimiento.folio, motivo.trim())
+  return { ok: true }
+}
+
+/**
  * Genera un dictamen de baja para cada bien sin pasar por el flujo de dos pasos (iniciar + concluir):
  * internamente crea el correctivo ya concluido como "No reparable" y su dictamen, para no duplicar esa lógica.
  */
@@ -507,6 +537,7 @@ export function useMantenimientosData() {
     dictamenesVisibles,
     iniciarMantenimiento,
     concluirMantenimiento,
+    cancelarMantenimiento,
     generarDictamenDirecto,
     bienDe,
     mantenimientoDe,

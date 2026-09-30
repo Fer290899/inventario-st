@@ -15,6 +15,14 @@
           </span>
           <p class="flex-1 pt-0.5 text-sm text-slate-700">{{ toast.mensaje }}</p>
           <button
+            v-if="toast.accion"
+            type="button"
+            class="shrink-0 pt-0.5 text-sm font-semibold text-blue-700 hover:text-blue-800 focus-visible:outline-none focus-visible:underline"
+            @click="deshacer(toast)"
+          >
+            {{ toast.accion.etiqueta }}
+          </button>
+          <button
             type="button"
             title="Cerrar"
             aria-label="Cerrar"
@@ -32,9 +40,14 @@
 </template>
 
 <script setup lang="ts">
-import { useToast, type ToastTipo } from '@/composables/useToast'
+import { useToast, type Toast, type ToastTipo } from '@/composables/useToast'
 
 const { toasts, cerrar } = useToast()
+
+function deshacer(toast: Toast) {
+  toast.accion?.ejecutar()
+  cerrar(toast.id)
+}
 
 const ESTILOS: Record<ToastTipo, string> = {
   success: 'bg-emerald-50 text-emerald-600',

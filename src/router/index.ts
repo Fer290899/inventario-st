@@ -67,6 +67,13 @@ const router = createRouter({
           meta: { permiso: 'admin:gestionar' satisfies Permiso }
         }
       ]
+    },
+    {
+      // Cualquier ruta que no exista, esté o no dentro de una sesión: sin esto, una URL inválida
+      // se queda en blanco (ningún registro coincide y el router no renderiza nada).
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: () => import('../pages/NotFound.vue')
     }
   ],
 })

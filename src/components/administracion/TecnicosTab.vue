@@ -229,8 +229,14 @@ function alternar(tecnico: Tecnico) {
     toast.error(resultado.motivo ?? 'No se pudo cambiar el estatus.')
     return
   }
-  const accion = estabaActivo ? 'inactivado' : 'reactivado'
-  toast.success(`${tecnico.nombre}: ${accion}${resultado.cuentaInactivada ? '. También se inactivó su cuenta de acceso.' : ''}`)
+  if (!estabaActivo) {
+    toast.success(`${tecnico.nombre}: reactivado`)
+    return
+  }
+  toast.success(`${tecnico.nombre}: inactivado${resultado.cuentaInactivada ? '. También se inactivó su cuenta de acceso.' : ''}`, {
+    etiqueta: 'Deshacer',
+    ejecutar: () => alternarActivo(tecnico.id),
+  })
 }
 
 // --- Eliminar ---

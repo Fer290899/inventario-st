@@ -24,6 +24,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { formatFechaCorta } from '@/utils/formato'
 
 type MaintenanceAccent = 'amber' | 'rose'
 
@@ -41,15 +42,5 @@ const ACCENT_CLASSES: Record<MaintenanceAccent, string> = {
   rose: 'bg-rose-50 text-rose-600',
 }
 
-const dateFormatter = new Intl.DateTimeFormat('es', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-})
-
-const formattedDate = computed(() => {
-  if (!props.fecha) return 'Sin registros'
-  // Una fecha sin hora se parsearía como UTC y podría mostrarse un día antes.
-  return dateFormatter.format(new Date(props.fecha.length === 10 ? `${props.fecha}T00:00:00` : props.fecha))
-})
+const formattedDate = computed(() => (props.fecha ? formatFechaCorta(props.fecha) : 'Sin registros'))
 </script>

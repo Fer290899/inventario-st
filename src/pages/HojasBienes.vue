@@ -170,6 +170,7 @@ import {
 import { usePaginacion } from '@/composables/usePaginacion'
 import { useToast } from '@/composables/useToast'
 import { descargarCsv } from '@/utils/csv'
+import { formatFecha } from '@/utils/formato'
 import BienesAsignadosModal from '@/components/asignaciones/BienesAsignadosModal.vue'
 import DocumentoHoja from '@/components/documentos/DocumentoHoja.vue'
 import VistaPreviaDocumento from '@/components/documentos/VistaPreviaDocumento.vue'
@@ -271,10 +272,6 @@ const { paginaActual, totalPaginas, pagina: hojasPagina, rangoInicio, rangoFin, 
 // Vuelve a la primera página cuando cambia la pestaña, la búsqueda o los filtros.
 watch([tipoActivo, busqueda, filtros], irAlInicio)
 
-const dateFormatter = new Intl.DateTimeFormat('es', { day: '2-digit', month: '2-digit', year: 'numeric' })
-function formatFecha(fechaIso: string): string {
-  return dateFormatter.format(new Date(`${fechaIso}T00:00:00`))
-}
 
 const mostrarModalBienes = ref(false)
 const hojaSeleccionada = ref<Hoja | null>(null)

@@ -119,6 +119,7 @@ import { useAuth } from '@/composables/useAuth'
 import { motivoSinPermiso } from '@/config/permisos'
 import { computed, ref, watch } from 'vue'
 import { useBienesData } from '@/composables/useBienesData'
+import { formatFecha } from '@/utils/formato'
 import {
   CAUSAS_BAJA,
   DESTINOS_FINALES,
@@ -201,10 +202,6 @@ watch(resultado, (nuevo) => {
 
 const subtitulo = computed(() => (props.mantenimiento ? `${props.mantenimiento.folio} · ${props.mantenimiento.tipo}` : ''))
 
-const dateFormatter = new Intl.DateTimeFormat('es', { day: '2-digit', month: '2-digit', year: 'numeric' })
-function formatFecha(fechaIso: string): string {
-  return dateFormatter.format(new Date(`${fechaIso}T00:00:00`))
-}
 
 const puedeConfirmar = computed(() => {
   if (!props.mantenimiento || fechaConclusion.value === '') return false

@@ -186,11 +186,16 @@ function onRestablecer(password: string) {
 
 // --- Inactivar / reactivar ---
 function alternar(cuenta: CuentaPublica) {
+  const estabaActiva = cuenta.activo
   const resultado = alternarEstatus(cuenta.id)
   if (!resultado.ok) {
     toast.error(resultado.motivo ?? 'No se pudo cambiar el estatus.')
     return
   }
-  toast.success(`${cuenta.username}: ${cuenta.activo ? 'inactivada' : 'reactivada'}`)
+  if (!estabaActiva) {
+    toast.success(`${cuenta.username}: reactivada`)
+    return
+  }
+  toast.success(`${cuenta.username}: inactivada`, { etiqueta: 'Deshacer', ejecutar: () => alternarEstatus(cuenta.id) })
 }
 </script>

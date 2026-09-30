@@ -401,7 +401,11 @@ function alternar(catalogo: Catalogo, id: string, nombre: string) {
     toast.error(resultado.motivo ?? 'No se pudo cambiar el estatus.')
     return
   }
-  toast.success(`${nombre}: ${estaActivo(catalogo, id) ? 'reactivado' : 'inactivado'}`)
+  if (estaActivo(catalogo, id)) {
+    toast.success(`${nombre}: reactivado`)
+    return
+  }
+  toast.success(`${nombre}: inactivado`, { etiqueta: 'Deshacer', ejecutar: () => alternarActivo(catalogo, id) })
 }
 
 function estaActivo(catalogo: Catalogo, id: string): boolean {

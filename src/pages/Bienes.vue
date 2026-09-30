@@ -329,7 +329,7 @@ import { useMovimientosData, type NuevoMovimiento, type TipoMovimiento } from '@
 import { usePaginacion } from '@/composables/usePaginacion'
 import { useToast } from '@/composables/useToast'
 import { descargarCsv } from '@/utils/csv'
-import { formatMoneda } from '@/utils/formato'
+import { formatFecha, formatMoneda } from '@/utils/formato'
 import DocumentoFichaBien from '@/components/documentos/DocumentoFichaBien.vue'
 import VistaPreviaDocumento from '@/components/documentos/VistaPreviaDocumento.vue'
 import HistorialBienModal from '@/components/bienes/HistorialBienModal.vue'
@@ -455,11 +455,6 @@ const { paginaActual, totalPaginas, pagina: bienesPagina, rangoInicio, rangoFin,
 
 // Vuelve a la primera página cuando cambia la búsqueda o los filtros.
 watch([busqueda, filtros], irAlInicio)
-
-const dateFormatter = new Intl.DateTimeFormat('es', { day: '2-digit', month: '2-digit', year: 'numeric' })
-function formatFecha(fechaIso: string): string {
-  return dateFormatter.format(new Date(`${fechaIso}T00:00:00`))
-}
 
 const ESTATUS_ESTILOS: Record<EstatusBien, string> = {
   Asignado: 'bg-emerald-50 text-emerald-700',

@@ -56,6 +56,13 @@ export function formatFechaHora(instanteIso: string): string {
   return formateadorFechaHora.format(new Date(instanteIso))
 }
 
+const fechaCortaFormatter = new Intl.DateTimeFormat('es', { day: '2-digit', month: 'short', year: 'numeric' })
+
+/** Fecha con mes abreviado (ej. "05 ene 2026"); acepta ISO de solo fecha o con hora. */
+export function formatFechaCorta(fechaIso: string): string {
+  return fechaCortaFormatter.format(new Date(fechaIso.length === 10 ? `${fechaIso}T00:00:00` : fechaIso))
+}
+
 /** Minúsculas y sin acentos, para comparar textos al buscar. */
 export function normalizarTexto(texto: string): string {
   return texto

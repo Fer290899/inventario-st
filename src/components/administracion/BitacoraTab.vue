@@ -28,7 +28,7 @@
         </thead>
         <tbody class="divide-y divide-slate-100">
           <tr v-for="evento in eventosPagina" :key="evento.id" class="transition hover:bg-slate-50" data-doc="fila-bitacora">
-            <td class="whitespace-nowrap px-4 py-2.5 tabular-nums text-slate-600">{{ formatearFechaHora(evento.fechaHora) }}</td>
+            <td class="whitespace-nowrap px-4 py-2.5 tabular-nums text-slate-600">{{ formatFechaHora(evento.fechaHora) }}</td>
             <td class="whitespace-nowrap px-4 py-2.5 font-medium text-slate-800">{{ evento.usuario }}</td>
             <td class="whitespace-nowrap px-4 py-2.5 text-slate-600">{{ evento.rol }}</td>
             <td class="whitespace-nowrap px-4 py-2.5">
@@ -63,6 +63,7 @@ import { computed, ref, watch } from 'vue'
 import { useAuditoria, type ModuloAuditoria } from '@/composables/useAuditoria'
 import { usePaginacion } from '@/composables/usePaginacion'
 import { descargarCsv } from '@/utils/csv'
+import { formatFechaHora } from '@/utils/formato'
 import AppButton from '@/components/ui/AppButton.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
@@ -97,15 +98,10 @@ const filtrados = computed(() => {
 const { paginaActual, totalPaginas, pagina: eventosPagina, rangoInicio, rangoFin, total, irAlInicio } = usePaginacion(filtrados, pageSize)
 watch([busqueda, modulo], irAlInicio)
 
-const formateador = new Intl.DateTimeFormat('es', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
-function formatearFechaHora(iso: string): string {
-  return formateador.format(new Date(iso))
-}
-
 function exportar() {
   descargarCsv(
     ['Fecha y hora', 'Usuario', 'Rol', 'Módulo', 'Acción', 'Elemento', 'Detalle'],
-    filtrados.value.map((evento) => [formatearFechaHora(evento.fechaHora), evento.usuario, evento.rol, evento.modulo, evento.accion, evento.entidad, evento.detalle]),
+    filtrados.value.map((evento) => [formatFechaHora(evento.fechaHora), evento.usuario, evento.rol, evento.modulo, evento.accion, evento.entidad, evento.detalle]),
     'bitacora',
   )
 }

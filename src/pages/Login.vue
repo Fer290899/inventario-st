@@ -55,7 +55,13 @@
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <label for="password" class="block text-sm font-medium text-white/80">Contraseña</label>
-              <a href="#" class="text-xs font-medium text-blue-300 hover:text-blue-200 transition">¿Olvidaste tu contraseña?</a>
+              <button
+                type="button"
+                class="text-xs font-medium text-blue-300 transition hover:text-blue-200"
+                @click="toast.info('Contacta al administrador del sistema para restablecer tu contraseña.')"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
             </div>
             <div class="relative">
               <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-white/40">
@@ -142,11 +148,13 @@
 import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import { useToast } from '@/composables/useToast'
 import { CUENTAS_DEMO } from '@/services/authService'
 
 const router = useRouter()
 const route = useRoute()
 const { iniciarSesion, rol } = useAuth()
+const toast = useToast()
 
 const esDesarrollo = import.meta.env.DEV
 

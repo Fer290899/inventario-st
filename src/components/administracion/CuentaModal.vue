@@ -41,7 +41,10 @@
         <BaseSelect v-model="rolElegido" :disabled="propia || deTecnico" aria-label="Rol" data-doc="cuenta-rol">
           <option v-for="opcion in rolesDisponibles" :key="opcion" :value="opcion">{{ opcion }}</option>
         </BaseSelect>
-        <p class="mt-1 text-xs text-slate-400">{{ notaRol }}</p>
+        <p class="mt-1 text-xs text-slate-400">
+          {{ notaRol }}
+          <button type="button" class="font-medium text-blue-700 hover:text-blue-800 hover:underline" @click="verMatrizRoles">Ver qué puede hacer cada rol</button>
+        </p>
       </div>
 
       <CampoPassword v-if="!cuenta" id="cuenta-password" v-model="password" />
@@ -56,6 +59,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { DESCRIPCION_ROL, ROLES, type Rol } from '@/config/permisos'
 import { useCuentasData, type CuentaPublica } from '@/composables/useCuentasData'
 import { errorPassword } from '@/utils/password'
@@ -84,6 +88,7 @@ const emit = defineEmits<{
 }>()
 
 const { errorUsername, esPropia } = useCuentasData()
+const router = useRouter()
 
 const INPUT =
   'w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-400/60 focus:bg-white focus:ring-2 focus:ring-blue-500/30'
@@ -120,6 +125,11 @@ const puedeGuardar = computed(
     nombre.value.trim() !== '' &&
     (props.cuenta !== null || (username.value.trim() !== '' && errorUsuario.value === '' && errorPassword(password.value) === '')),
 )
+
+function verMatrizRoles() {
+  open.value = false
+  router.push({ query: { seccion: 'roles' } })
+}
 
 function guardar() {
   if (!puedeGuardar.value) return

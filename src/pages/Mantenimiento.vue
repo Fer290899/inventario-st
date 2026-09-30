@@ -158,8 +158,8 @@
                 </td>
                 <td class="px-4 py-2.5 text-slate-600">{{ dictamen.conclusion }}</td>
                 <td class="whitespace-nowrap px-4 py-2.5 text-xs text-slate-600">
-                  <p>Rep: {{ formatMoney(dictamen.costoReparacion) }}</p>
-                  <p>Repos: {{ formatMoney(dictamen.valorReposicion) }}</p>
+                  <p>Rep: {{ formatMoneda(dictamen.costoReparacion) }}</p>
+                  <p>Repos: {{ formatMoneda(dictamen.valorReposicion) }}</p>
                 </td>
                 <td class="whitespace-nowrap px-4 py-2.5 text-slate-600">{{ dictamen.destinoFinal }}</td>
                 <td class="whitespace-nowrap px-4 py-2.5 text-slate-600">{{ dictamen.elaboradoPor }}</td>
@@ -229,6 +229,7 @@ import {
 } from '@/composables/useMantenimientosData'
 import { usePaginacion } from '@/composables/usePaginacion'
 import { useToast } from '@/composables/useToast'
+import { formatFecha, formatMoneda } from '@/utils/formato'
 import DocumentoDictamen from '@/components/documentos/DocumentoDictamen.vue'
 import VistaPreviaDocumento from '@/components/documentos/VistaPreviaDocumento.vue'
 import ConcluirMantenimientoModal from '@/components/mantenimiento/ConcluirMantenimientoModal.vue'
@@ -310,10 +311,6 @@ const CAUSA_ESTILOS: Record<CausaBaja, string> = {
   Otro: 'bg-slate-100 text-slate-600',
 }
 
-const moneyFormatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 })
-function formatMoney(valor?: number): string {
-  return valor === undefined ? '—' : moneyFormatter.format(valor)
-}
 
 const busqueda = ref('')
 const pageSize = ref(10)
@@ -428,10 +425,6 @@ watch([tabActivo, busqueda, filtros], () => {
   irAlInicioDictamenes()
 })
 
-const dateFormatter = new Intl.DateTimeFormat('es', { day: '2-digit', month: '2-digit', year: 'numeric' })
-function formatFecha(fechaIso: string): string {
-  return dateFormatter.format(new Date(`${fechaIso}T00:00:00`))
-}
 
 const mostrarVistaPrevia = ref(false)
 const dictamenImpresion = ref<Dictamen | null>(null)

@@ -111,7 +111,7 @@
 
       <!-- Usuario -->
       <div class="shrink-0 border-t border-slate-800 p-3">
-        <div class="flex items-center gap-3 rounded-lg px-2 py-2" :class="collapsed ? 'justify-center' : ''">
+        <div class="flex items-center gap-2 rounded-lg px-2 py-2" :class="collapsed ? 'justify-center' : ''">
           <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white" data-doc="avatar-sesion">
             {{ iniciales }}
           </div>
@@ -119,29 +119,29 @@
             <p class="truncate text-sm font-medium text-white" data-doc="nombre-sesion">{{ usuario?.nombre ?? 'Usuario' }}</p>
             <p class="truncate text-xs text-slate-400" data-doc="rol-sesion">{{ usuario?.rol ?? '' }}</p>
           </div>
-          <button
-            v-if="!collapsed"
-            type="button"
-            title="Cambiar mi contraseña"
-            class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
-            data-doc="abrir-cambiar-password"
-            @click="mostrarCambiarPassword = true"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
-            </svg>
-          </button>
-          <button
-            v-if="!collapsed"
-            type="button"
-            title="Cerrar sesión"
-            class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
-            @click="handleLogout"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0110.5 3h6a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0116.5 21h-6a2.25 2.25 0 01-2.25-2.25V15m-3 0l-3-3m0 0l3-3m-3 3H15" />
-            </svg>
-          </button>
+          <div v-if="!collapsed" class="flex shrink-0 items-center">
+            <button
+              type="button"
+              title="Cambiar mi contraseña"
+              class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
+              data-doc="abrir-cambiar-password"
+              @click="mostrarCambiarPassword = true"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              title="Cerrar sesión"
+              class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
+              @click="handleLogout"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0110.5 3h6a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0116.5 21h-6a2.25 2.25 0 01-2.25-2.25V15m-3 0l-3-3m0 0l3-3m-3 3H15" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </aside>

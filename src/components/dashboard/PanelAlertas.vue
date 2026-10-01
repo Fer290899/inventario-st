@@ -31,7 +31,7 @@
             </button>
           </div>
         </div>
-        <BaseSelect v-if="departamentos.length > 0" v-model="departamentoActivo" size="sm" class="w-44" aria-label="Filtrar por departamento" data-doc="filtro-departamento-alertas">
+        <BaseSelect v-if="departamentos.length > 0" v-model="departamentoActivo" size="sm" class="w-auto min-w-[11rem]" aria-label="Filtrar por departamento" data-doc="filtro-departamento-alertas">
           <option value="">Todos los departamentos</option>
           <option v-for="depto in departamentos" :key="depto" :value="depto">{{ depto }}</option>
         </BaseSelect>

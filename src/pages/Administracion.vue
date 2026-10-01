@@ -49,6 +49,7 @@
             <thead class="sticky top-0 z-10 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 shadow-[0_1px_0_0] shadow-slate-200">
               <tr>
                 <th class="whitespace-nowrap px-4 py-3">Nombre</th>
+                <th v-if="etiquetaRelacionColumna" class="whitespace-nowrap px-4 py-3">{{ etiquetaRelacionColumna }}</th>
                 <th class="whitespace-nowrap px-4 py-3">Estatus</th>
                 <th class="whitespace-nowrap px-4 py-3">Bienes que lo usan</th>
                 <th class="whitespace-nowrap px-4 py-3">Acciones</th>
@@ -57,6 +58,9 @@
             <tbody class="divide-y divide-slate-100">
               <tr v-for="elemento in elementosPagina" :key="elemento.id" class="transition hover:bg-slate-50">
                 <td class="whitespace-nowrap px-4 py-2.5 font-medium" :class="elemento.activo ? 'text-slate-800' : 'text-slate-400'">{{ elemento.nombre }}</td>
+                <td v-if="etiquetaRelacionColumna" class="whitespace-nowrap px-4 py-2.5 text-slate-600">
+                  {{ (catalogo === 'direccion' ? elemento.ubicacion : elemento.direccion) ?? '—' }}
+                </td>
                 <td class="whitespace-nowrap px-4 py-2.5">
                   <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="elemento.activo ? ESTATUS_ACTIVO : ESTATUS_INACTIVO">
                     {{ elemento.activo ? 'Activo' : 'Inactivo' }}
@@ -90,7 +94,7 @@
               </tr>
 
               <tr v-if="elementosPagina.length === 0">
-                <td colspan="4">
+                <td :colspan="etiquetaRelacionColumna ? 5 : 4">
                   <EmptyState mensaje="No se encontraron elementos que coincidan con la búsqueda." />
                 </td>
               </tr>
@@ -286,6 +290,11 @@ const conteos = computed<Partial<Record<Seccion, number>>>(() => ({
 
 const textoAgregar = computed(() => `Agregar ${SECCIONES[tabActivo.value].singular.toLowerCase()}`)
 
+// Dirección se relaciona con Ubicación; Departamento, con Dirección. Ubicación no tiene columna de relación.
+const etiquetaRelacionColumna = computed(() =>
+  catalogo.value === 'direccion' ? 'Ubicación' : catalogo.value === 'departamento' ? 'Dirección' : null,
+)
+
 const cuentasTab = ref<InstanceType<typeof CuentasTab> | null>(null)
 const tecnicosTab = ref<InstanceType<typeof TecnicosTab> | null>(null)
 
@@ -379,15 +388,15 @@ function abrirEdicionUsuario(usuario: Usuario) {
   mostrarModalUsuario.value = true
 }
 
-function onGuardarElemento(nombre: string) {
+function onGuardarElemento(nombre: string, relacion: string | undefined) {
   const elegido = catalogo.value as CatalogoSimple
   if (elementoEditando.value) {
-    actualizarElemento(elegido, elementoEditando.value.id, nombre)
+    actualizarElemento(elegido, elementoEditando.value.id, nombre, relacion)
     toast.success(`${accion(elegido, ['actualizada', 'actualizado'])}: ${nombre}`)
     return
   }
 
-  agregarElemento(elegido, nombre)
+  agregarElemento(elegido, nombre, relacion)
   irAlInicioElementos()
   toast.success(`${accion(elegido, ['agregada', 'agregado'])}: ${nombre}`)
 }

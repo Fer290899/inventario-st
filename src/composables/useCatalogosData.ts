@@ -1,8 +1,10 @@
 import { computed, reactive } from 'vue'
 import {
   DEPARTAMENTOS_SEMILLA,
+  DIRECCION_POR_DEPARTAMENTO,
   DIRECCIONES_SEMILLA,
   PUESTOS_SEMILLA,
+  UBICACION_POR_DIRECCION,
   UBICACIONES_SEMILLA,
   USUARIOS_SEMILLA,
 } from './catalogosSemilla'
@@ -18,6 +20,10 @@ export interface ElementoCatalogo {
   id: string
   nombre: string
   activo: boolean
+  /** Solo en Direcciones: nombre de la ubicación a la que pertenece. */
+  ubicacion?: string
+  /** Solo en Departamentos: nombre de la dirección a la que pertenece. */
+  direccion?: string
 }
 
 /** Personal que recibe bienes en resguardo. La ficha es informativa: los formularios de asignación siguen con captura manual. */
@@ -57,8 +63,12 @@ function semillaSimple(prefijo: string, nombres: string[]): ElementoCatalogo[] {
 
 // Instancias compartidas: todas las vistas ven las mismas listas.
 const ubicaciones = reactive<ElementoCatalogo[]>(semillaSimple('ubi', UBICACIONES_SEMILLA))
-const direcciones = reactive<ElementoCatalogo[]>(semillaSimple('dir', DIRECCIONES_SEMILLA))
-const departamentos = reactive<ElementoCatalogo[]>(semillaSimple('dep', DEPARTAMENTOS_SEMILLA))
+const direcciones = reactive<ElementoCatalogo[]>(
+  DIRECCIONES_SEMILLA.map((nombre) => ({ id: nuevoId('dir'), nombre, activo: true, ubicacion: UBICACION_POR_DIRECCION[nombre] })),
+)
+const departamentos = reactive<ElementoCatalogo[]>(
+  DEPARTAMENTOS_SEMILLA.map((nombre) => ({ id: nuevoId('dep'), nombre, activo: true, direccion: DIRECCION_POR_DEPARTAMENTO[nombre] })),
+)
 const usuarios = reactive<Usuario[]>(
   USUARIOS_SEMILLA.map((nombre, indice) => ({
     id: nuevoId('usr'),
@@ -128,10 +138,12 @@ export function useCatalogosData() {
 
     if (catalogo === 'ubicacion') {
       total += movimientos.filter((movimiento) => movimiento.destino?.ubicacion === nombre).length
+      total += direcciones.filter((direccion) => direccion.ubicacion === nombre).length
     } else if (catalogo === 'direccion') {
       total += usuarios.filter((usuario) => usuario.direccion === nombre).length
       total += hojas.filter((hoja) => hoja.direccion === nombre).length
       total += movimientos.filter((movimiento) => movimiento.destino?.direccion === nombre).length
+      total += departamentos.filter((departamento) => departamento.direccion === nombre).length
     } else if (catalogo === 'departamento') {
       total += usuarios.filter((usuario) => usuario.departamento === nombre).length
       total += hojas.filter((hoja) => hoja.departamento === nombre).length
@@ -148,23 +160,37 @@ export function useCatalogosData() {
     return catalogo === 'ubicacion' ? ubicaciones : catalogo === 'direccion' ? direcciones : departamentos
   }
 
-  function agregarElemento(catalogo: CatalogoSimple, nombre: string): ElementoCatalogo {
+  function agregarElemento(catalogo: CatalogoSimple, nombre: string, relacion?: string): ElementoCatalogo {
     // TODO: reemplazar por la llamada real, ej. await catalogosApi.crear(catalogo, { nombre })
     const elemento: ElementoCatalogo = { id: nuevoId(catalogo.slice(0, 3)), nombre: nombre.trim(), activo: true }
+    if (catalogo === 'direccion') elemento.ubicacion = relacion
+    else if (catalogo === 'departamento') elemento.direccion = relacion
     listaSimple(catalogo).unshift(elemento)
     registrarAuditoria('Catálogos', 'Alta', ETIQUETA_CATALOGO[catalogo], elemento.nombre)
     return elemento
   }
 
-  function actualizarElemento(catalogo: CatalogoSimple, id: string, nombre: string) {
+  function actualizarElemento(catalogo: CatalogoSimple, id: string, nombre: string, relacion?: string) {
     // TODO: reemplazar por la llamada real, ej. await catalogosApi.actualizar(catalogo, id, { nombre })
     const elemento = listaSimple(catalogo).find((item) => item.id === id)
     if (!elemento) return
 
     const anterior = elemento.nombre
+    const relacionAnterior = catalogo === 'direccion' ? elemento.ubicacion : catalogo === 'departamento' ? elemento.direccion : undefined
     elemento.nombre = nombre.trim()
-    if (anterior === elemento.nombre) return
-    registrarAuditoria('Catálogos', 'Renombrar', ETIQUETA_CATALOGO[catalogo], `${anterior} → ${elemento.nombre}`)
+    if (catalogo === 'direccion') elemento.ubicacion = relacion
+    else if (catalogo === 'departamento') elemento.direccion = relacion
+
+    const cambioNombre = anterior !== elemento.nombre
+    const cambioRelacion = relacion !== relacionAnterior
+    if (!cambioNombre && !cambioRelacion) return
+    registrarAuditoria(
+      'Catálogos',
+      cambioNombre ? 'Renombrar' : 'Edición',
+      ETIQUETA_CATALOGO[catalogo],
+      cambioNombre ? `${anterior} → ${elemento.nombre}` : elemento.nombre,
+    )
+    if (!cambioNombre) return
 
     // Lo vigente (bienes y fichas de usuario) sigue al nombre nuevo; las hojas y movimientos son
     // instantáneas firmadas y conservan el nombre que tenían.
@@ -176,6 +202,19 @@ export function useCatalogosData() {
     for (const usuario of usuarios) {
       if (catalogo === 'direccion' && usuario.direccion === anterior) usuario.direccion = elemento.nombre
       if (catalogo === 'departamento' && usuario.departamento === anterior) usuario.departamento = elemento.nombre
+    }
+
+    // Cascada entre catálogos: si cambia el nombre de una Ubicación o Dirección, lo que apuntaba a
+    // ella por nombre (Direcciones y Departamentos, respectivamente) sigue apuntando a la nueva.
+    if (catalogo === 'ubicacion') {
+      for (const direccion of direcciones) {
+        if (direccion.ubicacion === anterior) direccion.ubicacion = elemento.nombre
+      }
+    }
+    if (catalogo === 'direccion') {
+      for (const departamento of departamentos) {
+        if (departamento.direccion === anterior) departamento.direccion = elemento.nombre
+      }
     }
   }
 

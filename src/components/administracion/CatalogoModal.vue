@@ -22,6 +22,14 @@
       <p v-else-if="elemento" class="mt-1.5 text-xs text-slate-400">
         Los bienes que ya lo tienen se actualizan con el nombre nuevo. Las hojas y movimientos firmados conservan el nombre anterior.
       </p>
+
+      <div v-if="etiquetaRelacion" class="mt-4">
+        <label class="mb-1.5 block text-sm font-semibold text-slate-700" for="catalogo-relacion">{{ etiquetaRelacion }}</label>
+        <BaseSelect id="catalogo-relacion" v-model="relacion">
+          <option value="">Sin asignar</option>
+          <option v-for="opcion in opcionesRelacion" :key="opcion" :value="opcion">{{ opcion }}</option>
+        </BaseSelect>
+      </div>
     </form>
 
     <template #footer>
@@ -36,6 +44,7 @@ import { computed, ref, watch } from 'vue'
 import { useCatalogosData, type CatalogoSimple, type ElementoCatalogo } from '@/composables/useCatalogosData'
 import AppButton from '@/components/ui/AppButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 
 const props = defineProps<{
   catalogo: CatalogoSimple
@@ -46,10 +55,10 @@ const props = defineProps<{
 const open = defineModel<boolean>('open', { required: true })
 
 const emit = defineEmits<{
-  guardar: [nombre: string]
+  guardar: [nombre: string, relacion: string | undefined]
 }>()
 
-const { existeNombre } = useCatalogosData()
+const { activas, existeNombre } = useCatalogosData()
 
 const INPUT =
   'w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-400/60 focus:bg-white focus:ring-2 focus:ring-blue-500/30'
@@ -65,16 +74,27 @@ const EJEMPLOS: Record<CatalogoSimple, string> = {
 }
 
 const nombre = ref('')
+const relacion = ref('')
 
 // Cada vez que se abre, arranca desde el elemento a editar (o vacío si es un alta).
 watch(open, (isOpen) => {
-  if (isOpen) nombre.value = props.elemento?.nombre ?? ''
+  if (!isOpen) return
+  nombre.value = props.elemento?.nombre ?? ''
+  relacion.value = (props.catalogo === 'direccion' ? props.elemento?.ubicacion : props.elemento?.direccion) ?? ''
 })
 
 const titulo = computed(() => (props.elemento ? `Editar ${SINGULAR[props.catalogo]}` : `Agregar ${SINGULAR[props.catalogo]}`))
 const subtitulo = computed(() =>
   props.elemento ? 'Cambia el nombre del elemento del catálogo' : 'Da de alta un nuevo elemento en el catálogo',
 )
+
+// Una Dirección se relaciona con una Ubicación; un Departamento, con una Dirección. Las Ubicaciones no tienen relación.
+const ETIQUETA_RELACION: Partial<Record<CatalogoSimple, string>> = { direccion: 'Ubicación', departamento: 'Dirección' }
+const etiquetaRelacion = computed(() => ETIQUETA_RELACION[props.catalogo])
+const opcionesRelacion = computed(() => {
+  const lista = props.catalogo === 'direccion' ? activas.ubicaciones : props.catalogo === 'departamento' ? activas.direcciones : []
+  return relacion.value && !lista.includes(relacion.value) ? [relacion.value, ...lista] : lista
+})
 
 const error = computed(() =>
   nombre.value.trim() !== '' && existeNombre(props.catalogo, nombre.value, props.elemento?.id)
@@ -86,7 +106,7 @@ const puedeGuardar = computed(() => nombre.value.trim() !== '' && error.value ==
 
 function guardar() {
   if (!puedeGuardar.value) return
-  emit('guardar', nombre.value.trim())
+  emit('guardar', nombre.value.trim(), etiquetaRelacion.value ? relacion.value || undefined : undefined)
   open.value = false
 }
 </script>

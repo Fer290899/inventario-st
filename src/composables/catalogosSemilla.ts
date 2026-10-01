@@ -13,6 +13,24 @@ export const DIRECCIONES_SEMILLA = [
 
 export const DEPARTAMENTOS_SEMILLA = ['Recursos Humanos', 'Tecnologías de la Información', 'Contabilidad', 'Mantenimiento', 'Compras']
 
+/** Ubicación a la que pertenece cada Dirección (por nombre), para la relación entre catálogos. */
+export const UBICACION_POR_DIRECCION: Record<string, string> = {
+  'Dirección General': 'Edificio Central - Piso 1',
+  'Dirección de Administración': 'Edificio Central - Piso 2',
+  'Dirección de Sistemas': 'Anexo Norte',
+  'Dirección Jurídica': 'Edificio Central - Piso 2',
+  'Dirección de Finanzas': 'Bodega General',
+}
+
+/** Dirección a la que pertenece cada Departamento (por nombre), para la relación entre catálogos. */
+export const DIRECCION_POR_DEPARTAMENTO: Record<string, string> = {
+  'Recursos Humanos': 'Dirección de Administración',
+  'Tecnologías de la Información': 'Dirección de Sistemas',
+  Contabilidad: 'Dirección de Finanzas',
+  Mantenimiento: 'Dirección de Administración',
+  Compras: 'Dirección de Administración',
+}
+
 export const USUARIOS_SEMILLA = [
   'Ana Torres Medina',
   'Carlos Jiménez Ruiz',

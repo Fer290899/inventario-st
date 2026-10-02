@@ -158,7 +158,7 @@ function tickAmountFor(dias: number) {
 
 const preventivoOptions = computed(() =>
   buildDailyAreaChartOptions(
-    { colorFrom: '#2563eb', colorTo: '#4f46e5' },
+    { colorFrom: '#0D6E5C', colorTo: '#0A5A4A' },
     { tickAmount: tickAmountFor(preventivoDias.value) },
   ),
 )
@@ -168,7 +168,7 @@ const preventivoSeries = computed(() =>
 
 const correctivoOptions = computed(() =>
   buildDailyAreaChartOptions(
-    { colorFrom: '#f43f5e', colorTo: '#dc2626' },
+    { colorFrom: '#B42318', colorTo: '#8F1B12' },
     { tickAmount: tickAmountFor(correctivoDias.value) },
   ),
 )

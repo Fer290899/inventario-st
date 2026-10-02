@@ -8,7 +8,7 @@
     <div class="grid grid-cols-1 gap-6 min-[1366px]:grid-cols-[13rem_minmax(0,1fr)] min-[1366px]:items-start">
       <AdministracionNav :seccion="tabActivo" :conteos="conteos" />
 
-    <div class="min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="min-w-0 rounded-lg border border-slate-200 bg-white">
       <!-- Encabezado de la sección -->
       <div class="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div class="min-w-0">

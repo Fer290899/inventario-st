@@ -12,7 +12,7 @@
     </div>
 
     <!-- Escritorio: menú lateral -->
-    <nav class="hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm min-[1366px]:block" aria-label="Secciones de administración" data-doc="nav-administracion">
+    <nav class="hidden rounded-lg border border-slate-200 bg-white p-2 min-[1366px]:block" aria-label="Secciones de administración" data-doc="nav-administracion">
       <div v-for="(grupo, indice) in GRUPOS" :key="grupo.titulo" :class="indice > 0 ? 'mt-2 border-t border-slate-100 pt-2' : ''">
         <p class="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{{ grupo.titulo }}</p>
         <RouterLink

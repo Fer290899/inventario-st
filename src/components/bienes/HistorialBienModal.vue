@@ -18,7 +18,7 @@
         </div>
         <div>
           <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Valor de adquisición</dt>
-          <dd class="font-medium tabular-nums text-slate-800">{{ bien.valorAdquisicion !== undefined ? formatMoneda(bien.valorAdquisicion, { centavos: true }) : '—' }}</dd>
+          <dd class="font-mono font-medium tabular-nums text-slate-800">{{ bien.valorAdquisicion !== undefined ? formatMoneda(bien.valorAdquisicion, { centavos: true }) : '—' }}</dd>
         </div>
       </dl>
 

@@ -74,7 +74,7 @@
       </div>
     </div>
 
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="rounded-lg border border-slate-200 bg-white">
       <!-- Controles: tamaño de página + buscador + filtros -->
       <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
         <PageSizeSelect v-model="pageSize" />
@@ -203,7 +203,7 @@
               <td class="whitespace-nowrap px-4 py-2.5 tabular-nums text-slate-600">{{ formatFecha(bien.fechaAlta) }}</td>
               <td class="min-w-[14rem] px-4 py-2.5 text-slate-600">{{ bien.caracteristicas }}</td>
               <td class="whitespace-nowrap px-4 py-2.5 tabular-nums text-slate-600">{{ bien.mesesGarantia }}</td>
-              <td class="whitespace-nowrap px-4 py-2.5 tabular-nums text-slate-600">{{ formatMoneda(bien.valorAdquisicion, { centavos: true }) }}</td>
+              <td class="whitespace-nowrap px-4 py-2.5 font-mono tabular-nums text-slate-600">{{ formatMoneda(bien.valorAdquisicion, { centavos: true }) }}</td>
               <td class="whitespace-nowrap px-4 py-2.5">
                 <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="ESTATUS_ESTILOS[bien.estatus]">
                   {{ bien.estatus }}

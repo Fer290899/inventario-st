@@ -2,10 +2,10 @@
   <component
     :is="raiz"
     v-bind="atributosRaiz"
-    class="block w-full rounded-2xl border p-5 text-left shadow-sm transition hover:shadow-md"
+    class="block w-full rounded-lg border p-5 text-left transition"
     :class="[
       critico ? 'border-rose-300 bg-rose-50/40' : 'border-slate-200 bg-white',
-      esInteractiva ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2' : '',
+      esInteractiva ? 'cursor-pointer hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2' : '',
     ]"
   >
     <div class="flex items-center justify-between">
@@ -19,7 +19,7 @@
       </span>
     </div>
 
-    <p class="mt-4 text-2xl font-bold tabular-nums text-slate-800">{{ value }}</p>
+    <p class="mt-4 font-mono text-2xl font-semibold tabular-nums text-slate-800">{{ value }}</p>
     <p class="text-sm text-slate-500">{{ label }}</p>
   </component>
 </template>

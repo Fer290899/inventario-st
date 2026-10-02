@@ -6,8 +6,8 @@ export interface DailyChartTheme {
   colorTo: string
 }
 
-const SLATE_TEXT = '#64748b'
-const SLATE_GRID = '#e2e8f0'
+const SLATE_TEXT = '#78827A'
+const SLATE_GRID = '#DEDBD0'
 
 /**
  * Convierte una serie diaria { date, total } al formato { x, y } que espera

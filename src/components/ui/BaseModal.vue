@@ -12,7 +12,7 @@
             v-if="open"
             role="dialog"
             aria-modal="true"
-            class="flex max-h-[92vh] w-full flex-col rounded-2xl bg-white shadow-2xl"
+            class="flex max-h-[92vh] w-full flex-col rounded-lg bg-white shadow-lg"
             :class="SIZE_CLASSES[size]"
           >
             <!-- Encabezado -->

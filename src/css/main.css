@@ -1,7 +1,66 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Identidad InventarioST: tinta + papel + un acento de registro institucional.
+     Se redefinen las escalas de Tailwind en vez de crear nombres nuevos para que
+     cada clase bg-/text-/border-/ring- ya existente en la app (slate, blue, rose)
+     adopte la nueva paleta sin tener que tocar cada archivo que la usa. */
+
+  /* slate -> tinta (fondo cálido / texto) */
+  --color-slate-50: #F2F1EB;
+  --color-slate-100: #E8E6DD;
+  --color-slate-200: #DEDBD0;
+  --color-slate-300: #C7C3B4;
+  --color-slate-400: #9FA79E;
+  --color-slate-500: #78827A;
+  --color-slate-600: #5B655D;
+  --color-slate-700: #3E4A43;
+  --color-slate-800: #263129;
+  --color-slate-900: #14231F;
+  --color-slate-950: #0B140F;
+
+  /* blue -> registro (acción primaria, enlaces, estado activo) */
+  --color-blue-50: #EAF4F0;
+  --color-blue-100: #D1E8E0;
+  --color-blue-200: #A8D4C5;
+  --color-blue-300: #78BCA5;
+  --color-blue-400: #489C80;
+  --color-blue-500: #228163;
+  --color-blue-600: #0D6E5C;
+  --color-blue-700: #0A5A4A;
+  --color-blue-800: #09493D;
+  --color-blue-900: #073A31;
+  --color-blue-950: #042420;
+
+  /* rose -> crítico (correctivo abierto, baja, eliminar) */
+  --color-rose-50: #FBEAE8;
+  --color-rose-100: #F6D2CD;
+  --color-rose-200: #EDA89D;
+  --color-rose-300: #E07D6D;
+  --color-rose-400: #CF5544;
+  --color-rose-500: #C33726;
+  --color-rose-600: #B42318;
+  --color-rose-700: #8F1B12;
+  --color-rose-800: #71160F;
+  --color-rose-900: #570F0A;
+  --color-rose-950: #330906;
+
+  /* emerald -> éxito/exportar: un verde franco, separado del teal de marca
+     (que ya ocupa esa misma familia de tono) para que ambos se distingan. */
+  --color-emerald-50: #EAF4EA;
+  --color-emerald-100: #D2E8D3;
+  --color-emerald-200: #A8D4AA;
+  --color-emerald-300: #78BC7C;
+  --color-emerald-400: #4E9E54;
+  --color-emerald-500: #3A8740;
+  --color-emerald-600: #2E7D32;
+  --color-emerald-700: #246327;
+  --color-emerald-800: #1D4F20;
+  --color-emerald-900: #163C18;
+  --color-emerald-950: #0D250F;
 }
 
 :root {

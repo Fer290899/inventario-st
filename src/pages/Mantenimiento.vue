@@ -18,7 +18,7 @@
       </AppButton>
     </div>
 
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="rounded-lg border border-slate-200 bg-white">
       <TabsBar v-model="tabActivo" :tabs="tabsConConteo" label="Tipo de registro" />
 
       <!-- Controles: tamaño de página + buscador + filtros -->

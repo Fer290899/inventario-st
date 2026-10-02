@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+  <div class="rounded-lg border border-slate-200 bg-white p-5 transition hover:border-slate-300">
     <div class="flex items-center gap-3">
       <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" :class="ACCENT_CLASSES[accent]">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -12,7 +12,7 @@
     <dl class="mt-4 space-y-2">
       <div class="flex items-center justify-between text-sm">
         <dt class="text-slate-500">Finalizado</dt>
-        <dd class="font-medium tabular-nums text-slate-800">{{ formattedDate }}</dd>
+        <dd class="font-mono font-medium tabular-nums text-slate-800">{{ formattedDate }}</dd>
       </div>
       <div class="flex items-center justify-between text-sm">
         <dt class="text-slate-500">Técnico</dt>

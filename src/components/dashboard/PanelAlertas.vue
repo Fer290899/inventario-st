@@ -1,5 +1,5 @@
 <template>
-  <section id="panel-alertas" class="scroll-mt-4 rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="panel-alertas-titulo">
+  <section id="panel-alertas" class="scroll-mt-4 rounded-lg border border-slate-200 bg-white" aria-labelledby="panel-alertas-titulo">
     <div class="flex flex-col gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h3 id="panel-alertas-titulo" class="text-base font-semibold text-slate-800">Requiere atención</h3>
@@ -17,7 +17,7 @@
               :key="chip.valor"
               type="button"
               class="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
-              :class="grupoActivo === chip.valor ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+              :class="grupoActivo === chip.valor ? 'bg-white text-blue-700' : 'text-slate-500 hover:text-slate-700'"
               :aria-pressed="grupoActivo === chip.valor"
               @click="grupoActivo = chip.valor"
             >

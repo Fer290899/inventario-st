@@ -16,7 +16,7 @@
       </AppButton>
     </div>
 
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="rounded-lg border border-slate-200 bg-white">
       <!-- Controles: tamaño de página + categoría + buscador -->
       <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
         <PageSizeSelect v-model="pageSize" />

@@ -39,11 +39,11 @@
       <dl class="grid grid-cols-1 gap-x-8 sm:grid-cols-3 gap-y-2">
         <div>
           <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Costo de reparación</dt>
-          <dd class="font-medium tabular-nums">{{ formatMoneda(dictamen.costoReparacion) }}</dd>
+          <dd class="font-mono font-medium tabular-nums">{{ formatMoneda(dictamen.costoReparacion) }}</dd>
         </div>
         <div>
           <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Valor de reposición</dt>
-          <dd class="font-medium tabular-nums">{{ formatMoneda(dictamen.valorReposicion) }}</dd>
+          <dd class="font-mono font-medium tabular-nums">{{ formatMoneda(dictamen.valorReposicion) }}</dd>
         </div>
         <div>
           <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Destino final</dt>

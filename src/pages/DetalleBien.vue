@@ -6,12 +6,12 @@
       </RouterLink>
     </div>
 
-    <div v-if="!bien" class="rounded-2xl border border-slate-200 bg-white shadow-sm" data-doc="bien-no-encontrado">
+    <div v-if="!bien" class="rounded-lg border border-slate-200 bg-white" data-doc="bien-no-encontrado">
       <EmptyState mensaje="No se encontró el bien. Puede haberse eliminado o el enlace ya no es válido." />
     </div>
 
     <template v-else>
-      <div class="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-start sm:justify-between">
+      <div class="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0">
           <h2 class="text-2xl font-bold text-slate-800" data-doc="detalle-titulo">{{ bien.nombre }} {{ bien.marca }}</h2>
           <p class="mt-1 font-mono text-sm text-slate-500">{{ bien.numeroInventario || 'Sin número de inventario' }}</p>
@@ -28,7 +28,7 @@
       </div>
 
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section class="rounded-lg border border-slate-200 bg-white p-5">
           <h3 class="mb-3 text-sm font-semibold text-slate-800">Datos del bien</h3>
           <dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
             <div v-for="campo in campos" :key="campo.etiqueta" :class="{ 'sm:col-span-2': campo.ancho }">
@@ -38,7 +38,7 @@
           </dl>
         </section>
 
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section class="rounded-lg border border-slate-200 bg-white p-5">
           <h3 class="mb-4 text-sm font-semibold text-slate-800">Historial</h3>
           <LineaTiempoBien :bien="bien" />
         </section>

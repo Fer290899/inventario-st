@@ -2,7 +2,7 @@
   <div class="min-w-0 space-y-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">Tipos de bien</h2>
+        <h1 class="page-title">Tipos de bien</h1>
         <p class="mt-1 text-sm text-slate-500">
           Catálogo de tipos y las características que se capturan en cada uno · {{ tipos.length }} {{ tipos.length === 1 ? 'tipo' : 'tipos' }}
         </p>

@@ -1,162 +1,170 @@
 <template>
-  <div class="relative min-h-screen w-full flex items-center justify-center px-4 py-10 bg-[url('@/assets/fondoLogin.jpg')] bg-cover bg-center">
-    <!-- Overlay para dar contraste y ambientar la imagen -->
-    <div class="absolute inset-0 bg-slate-950/85"></div>
+  <div class="flex min-h-screen w-full bg-slate-50">
+    <!-- Marca: una pila de carpetas, sin datos. Solo en pantallas anchas. -->
+    <section class="relative hidden min-w-0 flex-1 basis-[560px] flex-col justify-between overflow-hidden bg-slate-900 px-14 pt-10 text-white lg:flex">
+      <div class="flex items-center gap-3">
+        <MarcaCarpeta />
+        <span class="text-lg font-semibold tracking-tight">InventarioST</span>
+      </div>
 
-    <!-- Tarjeta de login -->
-    <div class="relative w-full max-w-md">
-      <div class="rounded-lg border border-white/15 bg-white/10 backdrop-blur-xl shadow-lg px-8 py-10 sm:px-10">
-        <!-- Encabezado / marca -->
-        <div class="flex flex-col items-center text-center mb-8">
-          <div class="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-            </svg>
-          </div>
-          <h1 class="text-2xl font-bold text-white tracking-tight">InventarioST</h1>
-          <p class="text-sm text-white/60 mt-1">Ingresa a tu cuenta para continuar</p>
-        </div>
+      <div class="max-w-[26rem]">
+        <p class="text-3xl font-semibold leading-tight tracking-tight">Bienes, resguardos y mantenimientos en un solo registro.</p>
+        <p class="mt-3.5 text-base leading-relaxed text-ink-muted">Entra para consultar dónde está cada bien, quién lo tiene y qué mantenimiento le toca.</p>
+      </div>
 
-        <!-- Mensaje de error -->
-        <Transition name="fade">
-          <div
-            v-if="errorMessage"
-            class="mb-5 flex items-start gap-2 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+      <div class="relative mt-12 h-[250px] w-full max-w-[32.5rem]" aria-hidden="true">
+        <div
+          v-for="carpeta in CARPETAS"
+          :key="carpeta.top"
+          class="absolute inset-x-0 h-60 rounded-t-lg"
+          :style="{ top: `${carpeta.top}px`, background: carpeta.color }"
+        >
+          <span class="absolute -top-5 h-5 rounded-t-lg" :style="{ left: carpeta.izquierda, width: carpeta.ancho, background: carpeta.color }"></span>
+          <span
+            v-if="carpeta.rotulo"
+            class="absolute -top-5 flex h-5 items-center whitespace-nowrap px-3.5 text-xs font-semibold text-slate-900"
+            :style="{ left: carpeta.izquierda }"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
-            <span>{{ errorMessage }}</span>
-          </div>
-        </Transition>
+            {{ carpeta.rotulo }}
+          </span>
+        </div>
+      </div>
+    </section>
 
-        <form class="space-y-5" @submit.prevent="handleLogin">
-          <!-- Usuario -->
-          <div>
-            <label for="username" class="block text-sm font-medium text-white/80 mb-1.5">Usuario</label>
-            <div class="relative">
-              <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-white/40">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                </svg>
-              </span>
+    <!-- Formulario -->
+    <section class="flex min-w-0 flex-1 basis-[480px] flex-col items-center justify-center gap-7 px-6 py-12">
+      <div class="flex items-center gap-3 lg:hidden">
+        <MarcaCarpeta />
+        <span class="text-lg font-semibold tracking-tight text-slate-900">InventarioST</span>
+      </div>
+
+      <div class="w-full max-w-[25rem]">
+        <p class="inline-block rounded-t-lg bg-manila-200 px-5 pb-[9px] pt-2.5 text-[15px] font-semibold text-slate-900">Acceso</p>
+        <div class="rounded-b rounded-tr border border-t-2 border-slate-200 border-t-manila-200 bg-white px-8 pb-6 pt-8">
+          <h1 class="page-title text-[1.75rem]!">Iniciar sesión</h1>
+          <p class="mb-6 mt-2 text-[15px] text-slate-500">Ingresa con tu usuario del sistema.</p>
+
+          <!-- Falla de credenciales o cuenta inactiva -->
+          <div v-if="errorMessage" role="alert" class="mb-5 rounded-lg border border-rose-300 bg-rose-50 px-3.5 py-3 text-sm leading-snug text-rose-800">
+            <strong class="font-semibold">{{ errorMessage }}</strong>
+            <template v-if="sugerirRevision"> Revisa que escribiste bien tu usuario y que no tienes Bloq Mayús activado.</template>
+          </div>
+
+          <form class="space-y-5" novalidate @submit.prevent="handleLogin">
+            <div>
+              <label for="username" class="mb-1.5 block text-sm font-medium text-slate-900">Usuario</label>
               <input
                 id="username"
                 v-model="form.username"
                 type="text"
                 autocomplete="username"
-                placeholder="Ingresa tu usuario"
-                class="w-full rounded-lg border border-white/15 bg-white/5 py-2.5 pl-11 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:border-blue-400/60 focus:bg-white/10 focus:ring-2 focus:ring-blue-500/40"
+                autocapitalize="none"
+                spellcheck="false"
+                :aria-invalid="errores.username ? 'true' : 'false'"
+                :aria-describedby="errores.username ? 'username-error' : undefined"
+                class="h-11 w-full rounded-lg border bg-white px-3.5 text-[15px] text-slate-900 outline-none transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1"
+                :class="errores.username ? 'border-rose-600 ring-1 ring-rose-600' : 'border-slate-500'"
+                @input="errores.username = false"
               />
+              <p v-if="errores.username" id="username-error" class="mt-1.5 text-[13px] font-medium text-rose-700">Escribe tu usuario.</p>
             </div>
-          </div>
 
-          <!-- Contraseña -->
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <label for="password" class="block text-sm font-medium text-white/80">Contraseña</label>
-              <button
-                type="button"
-                class="text-xs font-medium text-blue-300 transition hover:text-blue-200"
-                @click="toast.info('Contacta al administrador del sistema para restablecer tu contraseña.')"
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
+            <div>
+              <label for="password" class="mb-1.5 block text-sm font-medium text-slate-900">Contraseña</label>
+              <div class="relative">
+                <input
+                  id="password"
+                  v-model="form.password"
+                  :type="showPassword ? 'text' : 'password'"
+                  autocomplete="current-password"
+                  :aria-invalid="errores.password ? 'true' : 'false'"
+                  :aria-describedby="descripcionPassword"
+                  class="h-11 w-full rounded-lg border bg-white pl-3.5 pr-24 text-[15px] text-slate-900 outline-none transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-1"
+                  :class="errores.password ? 'border-rose-600 ring-1 ring-rose-600' : 'border-slate-500'"
+                  @input="errores.password = false"
+                  @keydown="detectarMayusculas"
+                  @keyup="detectarMayusculas"
+                  @blur="mayusculas = false"
+                />
+                <button
+                  type="button"
+                  class="absolute right-1.5 top-1.5 h-8 rounded-md px-2.5 text-[13px] font-semibold text-blue-800 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  :aria-pressed="showPassword"
+                  :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  @click="showPassword = !showPassword"
+                >
+                  {{ showPassword ? 'Ocultar' : 'Mostrar' }}
+                </button>
+              </div>
+              <p v-if="errores.password" id="password-error" class="mt-1.5 text-[13px] font-medium text-rose-700">Escribe tu contraseña.</p>
+              <p v-if="mayusculas" id="password-mayusculas" class="mt-1.5 text-[13px] font-medium text-amber-700">Bloq Mayús está activado.</p>
             </div>
-            <div class="relative">
-              <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-white/40">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                </svg>
-              </span>
-              <input
-                id="password"
-                v-model="form.password"
-                :type="showPassword ? 'text' : 'password'"
-                autocomplete="current-password"
-                placeholder="Ingresa tu contraseña"
-                class="w-full rounded-lg border border-white/15 bg-white/5 py-2.5 pl-11 pr-11 text-sm text-white placeholder-white/40 outline-none transition focus:border-blue-400/60 focus:bg-white/10 focus:ring-2 focus:ring-blue-500/40"
-              />
-              <button
-                type="button"
-                tabindex="-1"
-                class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-white/40 hover:text-white/70 transition"
-                @click="showPassword = !showPassword"
-              >
-                <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-            </div>
+
+            <label class="flex items-center gap-2.5 text-sm text-slate-800">
+              <input id="remember" v-model="form.remember" type="checkbox" class="h-[18px] w-[18px] rounded border-slate-400 text-blue-600 focus:ring-2 focus:ring-blue-600" />
+              Mantener la sesión en este equipo
+            </label>
+
+            <button
+              type="submit"
+              :disabled="loading"
+              class="flex h-12 w-full items-center justify-center gap-2.5 rounded-lg bg-blue-600 text-[15px] font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              <svg v-if="loading" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              <span>{{ loading ? 'Ingresando…' : 'Iniciar sesión' }}</span>
+            </button>
+          </form>
+
+          <p class="mt-5 border-t border-slate-200 pt-4 text-[13px] leading-snug text-slate-500">
+            ¿No recuerdas tu contraseña? Pide a un administrador que la restablezca.
+          </p>
+
+          <!-- Cuentas de prueba: solo en desarrollo -->
+          <div v-if="esDesarrollo" class="mt-5 rounded-lg border border-dashed border-slate-300 px-3 py-2.5" data-doc="cuentas-demo">
+            <p class="mb-1.5 text-xs font-semibold text-slate-500">Cuentas de prueba (solo en desarrollo)</p>
+            <ul class="space-y-0.5">
+              <li v-for="cuenta in CUENTAS_DEMO" :key="cuenta.username">
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-between gap-3 rounded px-2 py-1 text-left text-xs text-slate-700 transition hover:bg-manila-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  @click="usarCuenta(cuenta.username, cuenta.password)"
+                >
+                  <span class="font-mono">{{ cuenta.username }} / {{ cuenta.password }}</span>
+                  <span class="text-slate-500">{{ cuenta.rol }}</span>
+                </button>
+              </li>
+            </ul>
           </div>
-
-          <!-- Recordarme -->
-          <div class="flex items-center">
-            <input
-              id="remember"
-              v-model="form.remember"
-              type="checkbox"
-              class="h-4 w-4 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-0"
-            />
-            <label for="remember" class="ml-2 text-sm text-white/70 select-none">Recordarme en este equipo</label>
-          </div>
-
-          <!-- Botón submit -->
-          <button
-            type="submit"
-            :disabled="loading"
-            class="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <svg v-if="loading" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            <span>{{ loading ? 'Ingresando...' : 'Iniciar sesión' }}</span>
-          </button>
-        </form>
-
-        <!-- Cuentas de prueba: solo en desarrollo -->
-        <div v-if="esDesarrollo" class="mt-6 rounded-lg border border-white/10 bg-white/5 px-4 py-3" data-doc="cuentas-demo">
-          <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">Cuentas de prueba</p>
-          <ul class="space-y-1">
-            <li v-for="cuenta in CUENTAS_DEMO" :key="cuenta.username">
-              <button
-                type="button"
-                class="flex w-full items-center justify-between gap-3 rounded-md px-2 py-1 text-left text-xs text-white/70 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50"
-                @click="usarCuenta(cuenta.username, cuenta.password)"
-              >
-                <span class="font-mono">{{ cuenta.username }} / {{ cuenta.password }}</span>
-                <span class="text-white/40">{{ cuenta.rol }}</span>
-              </button>
-            </li>
-          </ul>
         </div>
       </div>
-
-      <p class="mt-6 text-center text-xs text-white/40">
-        © {{ new Date().getFullYear() }} InventarioST · Todos los derechos reservados
-      </p>
-    </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import MarcaCarpeta from '@/components/ui/MarcaCarpeta.vue'
 import { useAuth } from '@/composables/useAuth'
-import { useToast } from '@/composables/useToast'
 import { CUENTAS_DEMO } from '@/services/authService'
 
 const router = useRouter()
 const route = useRoute()
 const { iniciarSesion, rol } = useAuth()
-const toast = useToast()
 
 const esDesarrollo = import.meta.env.DEV
+
+// Pila de carpetas (de atrás hacia adelante): la de enfrente lleva el rótulo con los módulos reales.
+const CARPETAS = [
+  { top: 0, color: '#6B6A4E', izquierda: '4%', ancho: '110px', rotulo: '' },
+  { top: 34, color: '#8D8760', izquierda: '25%', ancho: '110px', rotulo: '' },
+  { top: 68, color: '#B0A576', izquierda: '46%', ancho: '110px', rotulo: '' },
+  { top: 102, color: '#CEBF88', izquierda: '67%', ancho: '110px', rotulo: '' },
+  { top: 136, color: '#EBD79B', izquierda: '4%', ancho: '12.25rem', rotulo: 'Bienes · Resguardos · Mantenimiento' },
+]
 
 const form = reactive({
   username: '',
@@ -164,13 +172,28 @@ const form = reactive({
   remember: false,
 })
 
+const errores = reactive({ username: false, password: false })
 const showPassword = ref(false)
+const mayusculas = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
+const sugerirRevision = ref(false)
+
+// aria-describedby del campo de contraseña: el error y el aviso de Bloq Mayús, si están a la vista.
+const descripcionPassword = computed(() => {
+  const ids = [errores.password ? 'password-error' : '', mayusculas.value ? 'password-mayusculas' : ''].filter(Boolean)
+  return ids.length > 0 ? ids.join(' ') : undefined
+})
+
+function detectarMayusculas(evento: KeyboardEvent) {
+  mayusculas.value = evento.getModifierState?.('CapsLock') ?? false
+}
 
 function usarCuenta(username: string, password: string) {
   form.username = username
   form.password = password
+  errores.username = false
+  errores.password = false
 }
 
 // Solo se acepta un destino interno del dashboard, para que ?redirect no sirva de redirección abierta.
@@ -183,11 +206,9 @@ function destino(): string {
 
 async function handleLogin() {
   errorMessage.value = ''
-
-  if (!form.username.trim() || !form.password.trim()) {
-    errorMessage.value = 'Ingresa tu usuario y contraseña.'
-    return
-  }
+  errores.username = !form.username.trim()
+  errores.password = !form.password.trim()
+  if (errores.username || errores.password) return
 
   loading.value = true
   try {
@@ -195,19 +216,10 @@ async function handleLogin() {
     await router.push(destino())
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'No se pudo iniciar sesión.'
+    // La sugerencia aplica solo a credenciales incorrectas, no a una cuenta inactiva.
+    sugerirRevision.value = errorMessage.value.includes('incorrectos')
   } finally {
     loading.value = false
   }
 }
 </script>
-
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>

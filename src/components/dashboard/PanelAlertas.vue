@@ -1,65 +1,72 @@
 <template>
-  <section id="panel-alertas" class="scroll-mt-4 rounded-lg border border-slate-200 bg-white" aria-labelledby="panel-alertas-titulo">
-    <div class="flex flex-col gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h3 id="panel-alertas-titulo" class="text-base font-semibold text-slate-800">Requiere atención</h3>
-        <p class="text-xs text-slate-500">
-          {{ resumen.total }} {{ resumen.total === 1 ? 'alerta activa' : 'alertas activas' }}
-          <template v-if="resumen.criticas > 0"> · {{ resumen.criticas }} {{ resumen.criticas === 1 ? 'crítica' : 'críticas' }}</template>
-        </p>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2">
-        <div class="overflow-x-auto">
-          <div class="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
-            <button
-              v-for="chip in CHIPS"
-              :key="chip.valor"
-              type="button"
-              class="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
-              :class="grupoActivo === chip.valor ? 'bg-white text-blue-700' : 'text-slate-500 hover:text-slate-700'"
-              :aria-pressed="grupoActivo === chip.valor"
-              @click="grupoActivo = chip.valor"
-            >
-              {{ chip.etiqueta }}
-              <span
-                class="rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums"
-                :class="grupoActivo === chip.valor ? 'bg-blue-50 text-blue-700' : 'bg-slate-200/70 text-slate-500'"
-              >
-                {{ conteo(chip.valor) }}
-              </span>
-            </button>
-          </div>
+  <div id="panel-alertas" class="scroll-mt-4">
+    <PestanaCarpeta id="panel-alertas-titulo" titulo="Requiere atención">
+      <template #acciones>
+        <div role="group" aria-label="Filtrar por tipo de alerta" class="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <button
+            v-for="chip in CHIPS"
+            :key="chip.valor"
+            type="button"
+            class="inline-flex items-baseline gap-1.5 whitespace-nowrap border-b-2 py-1.5 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            :class="grupoActivo === chip.valor ? 'border-blue-600 font-semibold text-slate-900' : 'border-transparent font-medium text-slate-500 hover:text-slate-800'"
+            :aria-pressed="grupoActivo === chip.valor"
+            @click="grupoActivo = chip.valor"
+          >
+            {{ chip.etiqueta }}
+            <span class="font-mono text-xs tabular-nums">{{ conteo(chip.valor) }}</span>
+          </button>
         </div>
-        <BaseSelect v-if="departamentos.length > 0" v-model="departamentoActivo" size="sm" class="w-auto min-w-[11rem]" aria-label="Filtrar por departamento" data-doc="filtro-departamento-alertas">
+      </template>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-900 px-6 py-3.5">
+        <p class="text-[13px] text-slate-500" data-kpi="alertasActivas">
+          <template v-if="resumen.criticas > 0">
+            <span class="font-semibold text-rose-700">{{ resumen.criticas }} {{ resumen.criticas === 1 ? 'crítica' : 'críticas' }}</span> de
+          </template>
+          {{ resumen.total }} {{ resumen.total === 1 ? 'alerta activa' : 'alertas activas' }}
+        </p>
+        <BaseSelect
+          v-if="departamentos.length > 0"
+          v-model="departamentoActivo"
+          size="sm"
+          class="w-auto min-w-[11rem]"
+          aria-label="Filtrar por departamento"
+          data-doc="filtro-departamento-alertas"
+        >
           <option value="">Todos los departamentos</option>
           <option v-for="depto in departamentos" :key="depto" :value="depto">{{ depto }}</option>
         </BaseSelect>
       </div>
-    </div>
 
-    <ul v-if="visibles.length > 0" class="max-h-96 divide-y divide-slate-100 overflow-auto" data-doc="lista-alertas">
-      <li v-for="alerta in visibles" :key="alerta.id">
-        <button
-          type="button"
-          class="flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
-          @click="abrir(alerta)"
-        >
-          <span class="inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-medium" :class="SEVERIDAD_ESTILOS[alerta.severidad]">
-            {{ SEVERIDAD_ETIQUETA[alerta.severidad] }}
-          </span>
-          <span class="min-w-0 flex-1">
-            <span class="block text-sm font-medium text-slate-800 sm:truncate">{{ alerta.titulo }}</span>
-            <span class="block text-xs text-slate-500 sm:truncate">{{ alerta.detalle }}</span>
-          </span>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-        </button>
-      </li>
-    </ul>
-    <EmptyState v-else mensaje="Todo al día: no hay alertas activas." />
-  </section>
+      <ul v-if="visibles.length > 0" class="max-h-[28rem] divide-y divide-slate-100 overflow-auto" data-doc="lista-alertas">
+        <li v-for="alerta in visibles" :key="alerta.id">
+          <button
+            type="button"
+            class="grid w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-1 px-6 py-3.5 text-left transition hover:bg-manila-50 focus-visible:bg-manila-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600 sm:grid-cols-[5.5rem_minmax(0,1fr)_auto]"
+            @click="abrir(alerta)"
+          >
+            <span class="inline-flex items-center gap-2 text-[13px] font-semibold" :class="SEVERIDAD_TEXTO[alerta.severidad]">
+              <span class="h-2 w-2 rounded-full" :class="SEVERIDAD_PUNTO[alerta.severidad]" aria-hidden="true"></span>
+              {{ SEVERIDAD_ETIQUETA[alerta.severidad] }}
+            </span>
+            <span class="min-w-0">
+              <span class="block text-[15px] font-medium text-slate-900 sm:truncate">{{ alerta.titulo }}</span>
+              <span class="block text-[13px] text-slate-500 sm:truncate">
+                <span class="font-mono text-xs">{{ partes(alerta).folio }}</span>
+                <template v-if="partes(alerta).resto"> · {{ partes(alerta).resto }}</template>
+              </span>
+            </span>
+            <span class="col-span-2 text-sm font-semibold text-blue-800 sm:col-span-1 sm:text-right">Revisar</span>
+          </button>
+        </li>
+      </ul>
+      <EmptyState v-else mensaje="Todo al día: no hay alertas activas." />
+
+      <p v-if="visibles.length > 0" class="border-t border-slate-100 px-6 py-3 text-[13px] text-slate-500">
+        {{ visibles.length }} {{ visibles.length === 1 ? 'alerta' : 'alertas' }} en esta lista
+      </p>
+    </PestanaCarpeta>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -68,7 +75,8 @@ import { useRouter } from 'vue-router'
 import { GRUPO_ETIQUETAS, grupoDe, useAlertasData, type Alerta, type GrupoAlerta } from '@/composables/useAlertasData'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
-import { SEVERIDAD_ESTILOS, SEVERIDAD_ETIQUETA } from './alertaEstilos'
+import PestanaCarpeta from '@/components/ui/PestanaCarpeta.vue'
+import { SEVERIDAD_ETIQUETA, SEVERIDAD_PUNTO, SEVERIDAD_TEXTO } from './alertaEstilos'
 
 type Chip = GrupoAlerta | 'todas'
 
@@ -100,6 +108,12 @@ const visibles = computed(() =>
 
 function conteo(chip: Chip): number {
   return chip === 'todas' ? resumen.value.total : resumen.value.porGrupo[chip]
+}
+
+/** El detalle empieza con el folio o el inventario ("M-C012 · abierto hace 80 días"): el folio va en mono. */
+function partes(alerta: Alerta): { folio: string; resto: string } {
+  const [folio = '', ...resto] = alerta.detalle.split(' · ')
+  return { folio, resto: resto.join(' · ') }
 }
 
 function abrir(alerta: Alerta) {

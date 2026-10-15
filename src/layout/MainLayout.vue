@@ -17,12 +17,8 @@
     >
       <!-- Logo -->
       <div class="flex h-16 shrink-0 items-center gap-3 border-b border-slate-800 px-5">
-        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-          </svg>
-        </div>
-        <span v-if="!collapsed" class="truncate text-lg font-bold tracking-tight text-white">InventarioST</span>
+        <MarcaCarpeta />
+        <span v-if="!collapsed" class="truncate text-[17px] font-semibold tracking-tight text-white">InventarioST</span>
       </div>
 
       <!-- Navegación -->
@@ -35,7 +31,7 @@
             class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
             :class="isActive(item.to)
               ? 'bg-blue-600/20 text-white shadow-[inset_3px_0_0_var(--color-blue-500)]'
-              : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'"
+              : 'text-ink-muted hover:bg-slate-800/80 hover:text-white'"
             :title="collapsed ? item.label : undefined"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -51,7 +47,7 @@
               class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
               :class="isGroupActive(item) || isGroupOpen(item.label)
                 ? 'bg-slate-800/80 text-white'
-                : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'"
+                : 'text-ink-muted hover:bg-slate-800/80 hover:text-white'"
               :title="collapsed ? item.label : undefined"
               @click="toggleGroup(item.label)"
             >
@@ -87,7 +83,7 @@
                     class="flex items-center gap-2 rounded-r-lg border-l-2 px-3 py-2 text-[13px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
                     :class="isActive(child.to)
                       ? 'border-blue-400 bg-white/10 text-white'
-                      : 'border-transparent text-slate-400 hover:bg-slate-800/80 hover:text-white'"
+                      : 'border-transparent text-ink-muted hover:bg-slate-800/80 hover:text-white'"
                   >
                     <span class="truncate">{{ child.label }}</span>
                   </RouterLink>
@@ -101,7 +97,7 @@
       <!-- Colapsar (solo escritorio) -->
       <button
         type="button"
-        class="hidden shrink-0 items-center justify-center gap-2 border-t border-slate-800 py-3 text-slate-400 transition hover:bg-slate-800/80 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400/60 lg:flex"
+        class="hidden shrink-0 items-center justify-center gap-2 border-t border-slate-800 py-3 text-ink-muted transition hover:bg-slate-800/80 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400/60 lg:flex"
         @click="collapsed = !collapsed"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-300" :class="{ 'rotate-180': collapsed }" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -112,18 +108,18 @@
       <!-- Usuario -->
       <div class="shrink-0 border-t border-slate-800 p-3">
         <div class="flex items-center gap-2 rounded-lg px-2 py-2" :class="collapsed ? 'justify-center' : ''">
-          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white" data-doc="avatar-sesion">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-manila-200 text-xs font-bold text-slate-900" data-doc="avatar-sesion">
             {{ iniciales }}
           </div>
           <div v-if="!collapsed" class="min-w-0 flex-1">
             <p class="truncate text-sm font-medium text-white" data-doc="nombre-sesion">{{ usuario?.nombre ?? 'Usuario' }}</p>
-            <p class="truncate text-xs text-slate-400" data-doc="rol-sesion">{{ usuario?.rol ?? '' }}</p>
+            <p class="truncate text-xs text-ink-muted" data-doc="rol-sesion">{{ usuario?.rol ?? '' }}</p>
           </div>
           <div v-if="!collapsed" class="flex shrink-0 items-center">
             <button
               type="button"
               title="Cambiar mi contraseña"
-              class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
+              class="shrink-0 rounded-lg p-1.5 text-ink-muted transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
               data-doc="abrir-cambiar-password"
               @click="mostrarCambiarPassword = true"
             >
@@ -134,7 +130,7 @@
             <button
               type="button"
               title="Cerrar sesión"
-              class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
+              class="shrink-0 rounded-lg p-1.5 text-ink-muted transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
               @click="handleLogout"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -149,42 +145,38 @@
     <!-- Columna principal -->
     <div class="flex min-w-0 flex-1 flex-col">
       <!-- Toolbar / Header -->
-      <header class="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 sm:px-6">
-        <div class="flex items-center gap-3">
+      <header class="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 sm:px-8">
+        <div class="flex min-w-0 items-center gap-3">
           <button
             type="button"
             class="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 lg:hidden"
+            aria-label="Abrir el menú"
             @click="mobileOpen = true"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
-          <h1 class="text-lg font-semibold text-slate-800">{{ pageTitle }}</h1>
+          <nav aria-label="Ruta" class="min-w-0 truncate text-sm text-slate-500">
+            <template v-for="(miga, indice) in migas" :key="miga">
+              <span v-if="indice > 0" aria-hidden="true" class="mx-1.5 text-slate-400">/</span>
+              <span :class="indice === migas.length - 1 ? 'font-medium text-slate-800' : ''" :aria-current="indice === migas.length - 1 ? 'page' : undefined">{{ miga }}</span>
+            </template>
+          </nav>
         </div>
 
-        <div class="flex items-center gap-2 sm:gap-4">
+        <div class="flex items-center gap-2 sm:gap-3">
           <!-- Buscador global -->
           <BuscadorGlobal />
 
           <!-- Alertas -->
           <AlertasMenu />
-
-          <div class="h-8 w-px bg-slate-200"></div>
-
-          <!-- Avatar -->
-          <div class="flex items-center gap-2">
-            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-              {{ iniciales }}
-            </div>
-            <span class="hidden text-sm font-medium text-slate-700 sm:block">{{ usuario?.nombre ?? 'Usuario' }}</span>
-          </div>
         </div>
       </header>
 
       <!-- Contenido (pages) -->
       <main class="min-w-0 flex-1 overflow-y-auto">
-        <div class="min-w-0 p-4 sm:p-6 lg:p-8">
+        <div class="min-w-0 p-4 sm:p-6 lg:px-8 lg:py-9">
           <RouterView />
         </div>
       </main>
@@ -200,6 +192,7 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 import AlertasMenu from '@/components/layout/AlertasMenu.vue'
 import BuscadorGlobal from '@/components/layout/BuscadorGlobal.vue'
 import CambiarPasswordModal from '@/components/layout/CambiarPasswordModal.vue'
+import MarcaCarpeta from '@/components/ui/MarcaCarpeta.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useCuentasData } from '@/composables/useCuentasData'
 import { useToast } from '@/composables/useToast'
@@ -242,7 +235,7 @@ const mostrarCambiarPassword = ref(false)
 const navItems: NavItem[] = [
   {
     type: 'link',
-    label: 'Dashboard',
+    label: 'Panel',
     to: '/dashboard/home',
     icon: 'M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25',
   },
@@ -251,8 +244,8 @@ const navItems: NavItem[] = [
     label: 'Bienes',
     icon: 'M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9',
     children: [
-      { label: 'Lista de Bienes', to: '/dashboard/bienes' },
-      { label: 'Hojas de resguardo y entrega', to: '/dashboard/bienes/hojas' },
+      { label: 'Lista de bienes', to: '/dashboard/bienes' },
+      { label: 'Hojas de resguardo', to: '/dashboard/bienes/hojas' },
       { label: 'Agregar un tipo de bien', to: '/dashboard/bienes/tipos-bien', permiso: 'tipos:gestionar' },
     ],
   },
@@ -283,18 +276,20 @@ const iniciales = computed(() => {
   return nombre.split(/\s+/).filter(Boolean).slice(0, 2).map((parte) => parte[0]!.toUpperCase()).join('') || 'US'
 })
 
-const pageTitle = computed(() => {
+// Ruta de navegación del encabezado: grupo y página. La página lleva su propio <h1>, así que el
+// encabezado ya no repite el título.
+const migas = computed<string[]>(() => {
   const metaTitle = route.meta?.title as string | undefined
-  if (metaTitle) return metaTitle
+  if (metaTitle) return route.path.startsWith('/dashboard/bienes') ? ['Bienes', metaTitle] : [metaTitle]
 
   for (const item of navItems) {
-    if (item.type === 'link' && isActive(item.to)) return item.label
+    if (item.type === 'link' && isActive(item.to)) return [item.label]
     if (item.type === 'group') {
       const activeChild = item.children.find((child) => isActive(child.to))
-      if (activeChild) return activeChild.label
+      if (activeChild) return [item.label, activeChild.label]
     }
   }
-  return 'Panel'
+  return ['Panel']
 })
 
 function isActive(to: string) {

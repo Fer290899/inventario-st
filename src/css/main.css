@@ -14,8 +14,8 @@
   --color-slate-100: #E8E6DD;
   --color-slate-200: #DEDBD0;
   --color-slate-300: #C7C3B4;
-  --color-slate-400: #9FA79E;
-  --color-slate-500: #78827A;
+  --color-slate-400: #6C766E;
+  --color-slate-500: #5F6A62;
   --color-slate-600: #5B655D;
   --color-slate-700: #3E4A43;
   --color-slate-800: #263129;
@@ -34,6 +34,32 @@
   --color-blue-800: #09493D;
   --color-blue-900: #073A31;
   --color-blue-950: #042420;
+
+  /* texto secundario sobre la tinta del sidebar (slate-400 ya no sirve ahí: se oscureció para
+     alcanzar 4.5:1 sobre fondos claros) */
+  --color-ink-muted: #B4BDB6;
+
+  /* manila -> pestaña de carpeta (secciones destacadas, expediente, selección). Es un acento de
+     superficie, nunca el color de un texto: sobre manila el texto va en tinta. */
+  --color-manila-50: #FAF3DC;
+  --color-manila-100: #F4E8BE;
+  --color-manila-200: #EBD79B;
+  --color-manila-300: #CEBF88;
+  --color-manila-400: #B0A576;
+  --color-manila-500: #8D8760;
+  --color-manila-600: #6B6A4E;
+
+  /* amber -> aviso / por vencer: ocre apagado en lugar del naranja por defecto de Tailwind */
+  --color-amber-50: #FBF1D9;
+  --color-amber-100: #F5E3B5;
+  --color-amber-200: #EBCB7F;
+  --color-amber-300: #DDB04E;
+  --color-amber-400: #C99224;
+  --color-amber-500: #B7791F;
+  --color-amber-600: #9A6213;
+  --color-amber-700: #7A4E00;
+  --color-amber-800: #5F3C00;
+  --color-amber-900: #452B00;
 
   /* rose -> crítico (correctivo abierto, baja, eliminar) */
   --color-rose-50: #FBEAE8;
@@ -83,5 +109,25 @@ body {
   }
   body {
     background: #fff;
+  }
+}
+
+/* Título de página: una sola vez por pantalla, como <h1>. */
+@utility page-title {
+  font-size: 1.875rem;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-slate-900);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

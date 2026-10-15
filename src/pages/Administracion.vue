@@ -1,7 +1,7 @@
 <template>
   <div class="min-w-0 space-y-6">
     <div>
-      <h2 class="text-2xl font-bold text-slate-800">Administración</h2>
+      <h1 class="page-title">Administración</h1>
       <p class="mt-1 text-sm text-slate-500">Catálogos, configuración y seguridad del sistema</p>
     </div>
 

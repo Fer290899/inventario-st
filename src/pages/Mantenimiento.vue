@@ -2,7 +2,7 @@
   <div class="min-w-0 space-y-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">Mantenimiento</h2>
+        <h1 class="page-title">Mantenimiento</h1>
         <p class="mt-1 text-sm text-slate-500">Preventivos, correctivos y los dictámenes de baja que se derivan de ellos</p>
       </div>
 

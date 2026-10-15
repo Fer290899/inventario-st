@@ -1,97 +1,72 @@
 import type { ApexOptions } from 'apexcharts'
 import type { DailyPoint } from '@/composables/useDashboardData'
 
-export interface DailyChartTheme {
-  colorFrom: string
-  colorTo: string
+const TEXTO = '#5F6A62'
+const REJILLA = '#E4E1D6'
+const EJE = '#14231F'
+
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+/** Fecha ISO (YYYY-MM-DD) → "12 oct", la etiqueta del eje X. */
+export function etiquetaDia(fechaIso: string): string {
+  const [, mes, dia] = fechaIso.split('-')
+  return `${Number(dia)} ${MESES_CORTOS[Number(mes) - 1]}`
 }
 
-const SLATE_TEXT = '#78827A'
-const SLATE_GRID = '#DEDBD0'
-
-/**
- * Convierte una serie diaria { date, total } al formato { x, y } que espera
- * ApexCharts para un eje `datetime` (x como timestamp epoch en milisegundos).
- */
-export function buildDailySeries(points: DailyPoint[], name: string) {
-  return [
-    {
-      name,
-      data: points.map((point) => ({
-        x: new Date(`${point.date}T00:00:00`).getTime(),
-        y: point.total,
-      })),
-    },
-  ]
+export interface SerieDiaria {
+  name: string
+  color: string
+  puntos: DailyPoint[]
 }
 
 /**
- * Opciones compartidas para una gráfica de área con eje de fechas, usadas
- * por ambas gráficas del dashboard (solo cambia la paleta de color y,
- * según el rango de días elegido, cuántas marcas de fecha se muestran).
+ * Barras agrupadas por día: un conteo diario es una cantidad discreta, así que una barra lo dice
+ * mejor que un área (que sugiere continuidad entre días). Todas las series comparten las fechas.
  */
-export function buildDailyAreaChartOptions(theme: DailyChartTheme, options: { tickAmount?: number } = {}): ApexOptions {
+export function buildDailyBarChart(
+  series: SerieDiaria[],
+  options: { tickAmount?: number } = {},
+): { options: ApexOptions; series: Array<{ name: string; data: number[] }> } {
   const { tickAmount = 7 } = options
+  const fechas = series[0]?.puntos.map((punto) => punto.date) ?? []
 
   return {
-    chart: {
-      type: 'area',
-      height: 300,
-      toolbar: { show: false },
-      zoom: { enabled: false },
-      fontFamily: 'inherit',
-      animations: { speed: 300 },
-    },
-    colors: [theme.colorFrom],
-    stroke: {
-      curve: 'smooth',
-      width: 2,
-    },
-    dataLabels: { enabled: false },
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.35,
-        opacityTo: 0.02,
-        colorStops: [
-          { offset: 0, color: theme.colorFrom, opacity: 0.35 },
-          { offset: 100, color: theme.colorTo, opacity: 0.02 },
-        ],
+    series: series.map((serie) => ({ name: serie.name, data: serie.puntos.map((punto) => punto.total) })),
+    options: {
+      chart: {
+        type: 'bar',
+        height: 220,
+        toolbar: { show: false },
+        zoom: { enabled: false },
+        fontFamily: 'inherit',
+        animations: { speed: 250 },
       },
-    },
-    grid: {
-      borderColor: SLATE_GRID,
-      strokeDashArray: 4,
-      padding: { left: 12, right: 12 },
-    },
-    xaxis: {
-      type: 'datetime',
-      tickAmount,
-      labels: {
-        format: 'dd MMM',
-        datetimeUTC: false,
-        style: { colors: SLATE_TEXT, fontSize: '12px' },
+      colors: series.map((serie) => serie.color),
+      plotOptions: { bar: { columnWidth: '70%', borderRadius: 2, borderRadiusApplication: 'end' } },
+      stroke: { show: true, width: 1, colors: ['transparent'] },
+      dataLabels: { enabled: false },
+      legend: { show: false },
+      grid: {
+        borderColor: REJILLA,
+        strokeDashArray: 0,
+        padding: { left: 8, right: 8 },
+        xaxis: { lines: { show: false } },
       },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-    },
-    yaxis: {
-      min: 0,
-      forceNiceScale: true,
-      labels: {
-        style: { colors: SLATE_TEXT, fontSize: '12px' },
+      xaxis: {
+        categories: fechas.map(etiquetaDia),
+        tickAmount,
+        tickPlacement: 'on',
+        labels: { rotate: 0, hideOverlappingLabels: true, style: { colors: TEXTO, fontSize: '12px' } },
+        axisBorder: { show: true, color: EJE },
+        axisTicks: { show: false },
       },
-    },
-    tooltip: {
-      x: { format: 'dd MMM yyyy' },
-      theme: 'light',
-    },
-    markers: {
-      size: 0,
-      strokeColors: theme.colorFrom,
-      strokeWidth: 2,
-      hover: { size: 5 },
+      yaxis: {
+        min: 0,
+        forceNiceScale: true,
+        labels: { style: { colors: TEXTO, fontSize: '12px' }, formatter: (valor: number) => String(Math.round(valor)) },
+      },
+      tooltip: { shared: true, intersect: false, theme: 'light' },
+      states: { hover: { filter: { type: 'none' } } },
     },
   }
 }

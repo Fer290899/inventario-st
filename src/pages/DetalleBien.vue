@@ -13,7 +13,7 @@
     <template v-else>
       <div class="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0">
-          <h2 class="text-2xl font-bold text-slate-800" data-doc="detalle-titulo">{{ bien.nombre }} {{ bien.marca }}</h2>
+          <h1 class="page-title" data-doc="detalle-titulo">{{ bien.nombre }} {{ bien.marca }}</h1>
           <p class="mt-1 font-mono text-sm text-slate-500">{{ bien.numeroInventario || 'Sin número de inventario' }}</p>
           <span class="mt-3 inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="ESTATUS_ESTILOS[bien.estatus]">{{ bien.estatus }}</span>
           <div class="mt-4 flex flex-wrap gap-2">
